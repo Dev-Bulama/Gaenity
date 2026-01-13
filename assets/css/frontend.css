@@ -1,0 +1,1520 @@
+/* ============================================
+   GAENITY COMMUNITY - MODERN UI/UX
+   Author: Skillscore IT Solutions and Training
+   ============================================ */
+
+/* CSS Variables for Theme Integration */
+:root {
+    --gaenity-primary: #2563eb;
+    --gaenity-primary-dark: #1e40af;
+    --gaenity-primary-light: #3b82f6;
+    --gaenity-secondary: #8b5cf6;
+    --gaenity-success: #10b981;
+    --gaenity-danger: #ef4444;
+    --gaenity-warning: #f59e0b;
+    --gaenity-info: #06b6d4;
+    
+    --gaenity-text-primary: #1e293b;
+    --gaenity-text-secondary: #64748b;
+    --gaenity-text-muted: #94a3b8;
+    
+    --gaenity-bg-primary: #ffffff;
+    --gaenity-bg-secondary: #f8fafc;
+    --gaenity-bg-tertiary: #f1f5f9;
+    
+    --gaenity-border: #e2e8f0;
+    --gaenity-border-light: #f1f5f9;
+    
+    --gaenity-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --gaenity-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --gaenity-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --gaenity-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --gaenity-shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    
+    --gaenity-radius-sm: 0.375rem;
+    --gaenity-radius: 0.5rem;
+    --gaenity-radius-md: 0.75rem;
+    --gaenity-radius-lg: 1rem;
+    --gaenity-radius-xl: 1.5rem;
+    --gaenity-radius-full: 9999px;
+    
+    --gaenity-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --gaenity-transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Styles */
+.gaenity-resources-section,
+.gaenity-community-home,
+.gaenity-form,
+.gaenity-discussion-board,
+.gaenity-polls,
+.gaenity-expert-request,
+.gaenity-expert-register,
+.gaenity-contact,
+.gaenity-chat {
+    margin: 3rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--gaenity-text-primary);
+    line-height: 1.6;
+}
+
+/* Utility Classes */
+.gaenity-hidden {
+    display: none !important;
+}
+
+/* Section Headers */
+.gaenity-section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: gaenityFadeInUp 0.6s ease-out;
+}
+
+.gaenity-section-header h2 {
+    font-size: clamp(1.875rem, 4vw, 2.5rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--gaenity-primary), var(--gaenity-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+.gaenity-section-header p {
+    max-width: 48rem;
+    margin: 0 auto;
+    font-size: 1.125rem;
+    color: var(--gaenity-text-secondary);
+    line-height: 1.75;
+}
+
+/* Resource Tabs */
+.gaenity-resource-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.gaenity-resource-tab {
+    background: var(--gaenity-bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--gaenity-radius-full);
+    padding: 0.75rem 1.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--gaenity-text-secondary);
+    transition: var(--gaenity-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.gaenity-resource-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--gaenity-primary), var(--gaenity-secondary));
+    opacity: 0;
+    transition: var(--gaenity-transition);
+}
+
+.gaenity-resource-tab:hover,
+.gaenity-resource-tab.active {
+    border-color: var(--gaenity-primary);
+    color: var(--gaenity-bg-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--gaenity-shadow-md);
+}
+
+.gaenity-resource-tab:hover::before,
+.gaenity-resource-tab.active::before {
+    opacity: 1;
+}
+
+.gaenity-resource-tab span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Resource Grid */
+.gaenity-resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+    animation: gaenityFadeIn 0.6s ease-out 0.2s both;
+}
+
+/* Resource Cards */
+.gaenity-resource-card {
+    border: 1px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-xl);
+    overflow: hidden;
+    background: var(--gaenity-bg-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: var(--gaenity-shadow);
+    transition: var(--gaenity-transition);
+    position: relative;
+}
+
+.gaenity-resource-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gaenity-primary), var(--gaenity-secondary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.gaenity-resource-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--gaenity-shadow-xl);
+    border-color: var(--gaenity-primary-light);
+}
+
+.gaenity-resource-card:hover::before {
+    transform: scaleX(1);
+}
+
+.gaenity-resource-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: var(--gaenity-transition);
+}
+
+.gaenity-resource-card:hover .gaenity-resource-image {
+    transform: scale(1.05);
+}
+
+.gaenity-resource-body {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+}
+
+.gaenity-resource-body h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gaenity-text-primary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.gaenity-resource-body p {
+    font-size: 0.9375rem;
+    color: var(--gaenity-text-secondary);
+    margin: 0;
+    flex: 1;
+}
+
+/* Buttons */
+.gaenity-button {
+    background: linear-gradient(135deg, var(--gaenity-primary), var(--gaenity-primary-dark));
+    color: var(--gaenity-bg-primary);
+    border: none;
+    border-radius: var(--gaenity-radius-md);
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: var(--gaenity-transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--gaenity-shadow);
+}
+
+.gaenity-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--gaenity-primary-light), var(--gaenity-primary));
+    opacity: 0;
+    transition: var(--gaenity-transition);
+}
+
+.gaenity-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gaenity-shadow-lg);
+}
+
+.gaenity-button:hover::before {
+    opacity: 1;
+}
+
+.gaenity-button:active {
+    transform: translateY(0);
+}
+
+.gaenity-button span {
+    position: relative;
+    z-index: 1;
+}
+
+.gaenity-button.ghost {
+    background: transparent;
+    color: var(--gaenity-primary);
+    border: 2px solid var(--gaenity-primary);
+    box-shadow: none;
+}
+
+.gaenity-button.ghost::before {
+    background: var(--gaenity-primary);
+}
+
+.gaenity-button.ghost:hover {
+    color: var(--gaenity-bg-primary);
+}
+
+.gaenity-button.ghost:hover::before {
+    opacity: 1;
+}
+
+.gaenity-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Coming Soon Badge */
+.gaenity-coming-soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--gaenity-bg-tertiary);
+    border-radius: var(--gaenity-radius-full);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--gaenity-text-secondary);
+}
+
+/* Empty States */
+.gaenity-empty-state,
+.gaenity-notice {
+    background: var(--gaenity-bg-secondary);
+    border: 2px dashed var(--gaenity-border);
+    padding: 2rem;
+    border-radius: var(--gaenity-radius-lg);
+    text-align: center;
+    color: var(--gaenity-text-secondary);
+    font-size: 1rem;
+    animation: gaenityFadeIn 0.4s ease-out;
+}
+
+.gaenity-empty-state::before {
+    content: '📭';
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Forms */
+.gaenity-form {
+    border: 1px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-xl);
+    padding: 2.5rem;
+    background: var(--gaenity-bg-primary);
+    box-shadow: var(--gaenity-shadow-md);
+    max-width: 48rem;
+    animation: gaenityFadeInUp 0.5s ease-out;
+}
+
+.gaenity-form h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-form p {
+    margin-bottom: 1.5rem;
+}
+
+.gaenity-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--gaenity-text-primary);
+    font-size: 0.9375rem;
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-form input,
+.gaenity-form select,
+.gaenity-form textarea {
+    width: 100%;
+    border: 2px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-md);
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    background: var(--gaenity-bg-primary);
+    color: var(--gaenity-text-primary);
+    transition: var(--gaenity-transition-fast);
+    font-family: inherit;
+}
+
+.gaenity-form input:focus,
+.gaenity-form select:focus,
+.gaenity-form textarea:focus {
+    outline: none;
+    border-color: var(--gaenity-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: var(--gaenity-bg-primary);
+}
+
+.gaenity-form input:hover,
+.gaenity-form select:hover,
+.gaenity-form textarea:hover {
+    border-color: var(--gaenity-primary-light);
+}
+
+.gaenity-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Checkbox Styles */
+.gaenity-checkbox {
+    margin: 1.5rem 0;
+}
+
+.gaenity-checkbox label {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: var(--gaenity-radius-md);
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-checkbox label:hover {
+    background: var(--gaenity-bg-secondary);
+}
+
+.gaenity-checkbox input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: var(--gaenity-primary);
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+}
+
+/* Form Feedback */
+.gaenity-form-feedback {
+    min-height: 1.5rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-radius: var(--gaenity-radius-md);
+    margin-top: 1rem;
+    display: none;
+    animation: gaenitySlideDown 0.3s ease-out;
+}
+
+.gaenity-form-feedback:not(:empty) {
+    display: block;
+}
+
+.gaenity-form-feedback:not(.gaenity-error) {
+    background: rgba(16, 185, 129, 0.1);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.gaenity-form-feedback.gaenity-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Community Guidelines */
+.gaenity-community-guidelines {
+    background: var(--gaenity-bg-secondary);
+    border-radius: var(--gaenity-radius-lg);
+    padding: 1.5rem 2rem;
+    margin: 1.5rem 0;
+    border-left: 4px solid var(--gaenity-primary);
+}
+
+.gaenity-community-guidelines h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--gaenity-text-primary);
+    font-size: 1.125rem;
+}
+
+.gaenity-community-guidelines ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.gaenity-community-guidelines li {
+    margin-bottom: 0.5rem;
+    color: var(--gaenity-text-secondary);
+}
+
+/* Column Layouts */
+.gaenity-columns {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.gaenity-columns h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-forum-structure ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.gaenity-forum-structure li {
+    margin-bottom: 0.5rem;
+}
+
+.gaenity-forum-structure a {
+    color: var(--gaenity-primary);
+    text-decoration: none;
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-forum-structure a:hover {
+    color: var(--gaenity-primary-dark);
+    text-decoration: underline;
+}
+
+/* Discussion Board */
+.gaenity-discussion-board {
+    animation: gaenityFadeIn 0.5s ease-out;
+}
+
+.gaenity-discussion-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.gaenity-discussion-item {
+    border: 1px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-lg);
+    padding: 1.75rem;
+    background: var(--gaenity-bg-primary);
+    box-shadow: var(--gaenity-shadow);
+    transition: var(--gaenity-transition);
+}
+
+.gaenity-discussion-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--gaenity-shadow-md);
+    border-color: var(--gaenity-primary-light);
+}
+
+.gaenity-discussion-item h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.gaenity-discussion-item h4 a {
+    color: var(--gaenity-text-primary);
+    text-decoration: none;
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-discussion-item h4 a:hover {
+    color: var(--gaenity-primary);
+}
+
+.gaenity-discussion-meta {
+    color: var(--gaenity-text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Filters */
+.gaenity-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    align-items: flex-end;
+    padding: 1.5rem;
+    background: var(--gaenity-bg-secondary);
+    border-radius: var(--gaenity-radius-lg);
+}
+
+.gaenity-filters label {
+    flex: 1;
+    min-width: 200px;
+    font-weight: 600;
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-filters select {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+/* Polls */
+.gaenity-polls {
+    display: grid;
+    gap: 2rem;
+}
+
+.gaenity-poll {
+    border: 1px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-xl);
+    padding: 2rem;
+    background: var(--gaenity-bg-primary);
+    box-shadow: var(--gaenity-shadow-md);
+    animation: gaenityFadeInUp 0.5s ease-out;
+}
+
+.gaenity-poll h4 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-poll-question {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--gaenity-text-secondary);
+    margin-top: 0.5rem;
+}
+
+.gaenity-poll-options {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.gaenity-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 2px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-md);
+    cursor: pointer;
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-radio:hover {
+    background: var(--gaenity-bg-secondary);
+    border-color: var(--gaenity-primary-light);
+}
+
+.gaenity-radio input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: var(--gaenity-primary);
+}
+
+.gaenity-radio input[type="radio"]:checked ~ * {
+    font-weight: 600;
+    color: var(--gaenity-primary);
+}
+
+/* Poll Results */
+.gaenity-poll-results {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--gaenity-border);
+}
+
+.gaenity-poll-results h5 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-poll-results ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.gaenity-poll-results li {
+    position: relative;
+    padding: 1rem 1.25rem;
+    background: var(--gaenity-bg-secondary);
+    border-radius: var(--gaenity-radius-md);
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gaenity-result-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.15), rgba(139, 92, 246, 0.15));
+    border-radius: var(--gaenity-radius-md);
+    z-index: 0;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gaenity-result-label,
+.gaenity-result-value {
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+}
+
+.gaenity-result-label {
+    color: var(--gaenity-text-primary);
+}
+
+.gaenity-result-value {
+    color: var(--gaenity-primary);
+}
+
+/* Expert Sections */
+.gaenity-expert-request,
+.gaenity-expert-register {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gaenity-mini-process {
+    display: grid;
+    gap: 1rem;
+    padding-left: 0;
+    list-style: none;
+    margin: 2rem 0;
+}
+
+.gaenity-mini-process li {
+    padding: 1.25rem 1.5rem;
+    background: var(--gaenity-bg-secondary);
+    border-radius: var(--gaenity-radius-md);
+    border-left: 4px solid var(--gaenity-primary);
+    position: relative;
+}
+
+.gaenity-mini-process li::before {
+    content: counter(list-item);
+    counter-increment: list-item;
+    position: absolute;
+    left: -0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2rem;
+    height: 2rem;
+    background: var(--gaenity-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: var(--gaenity-shadow);
+}
+
+/* Chat Interface */
+.gaenity-chat {
+    border: 1px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-xl);
+    padding: 2rem;
+    background: var(--gaenity-bg-primary);
+    box-shadow: var(--gaenity-shadow-md);
+    animation: gaenityFadeInUp 0.5s ease-out;
+}
+
+.gaenity-chat h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.gaenity-chat-window {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 2px solid var(--gaenity-border);
+    border-radius: var(--gaenity-radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: var(--gaenity-bg-secondary);
+    scroll-behavior: smooth;
+}
+
+.gaenity-chat-window::-webkit-scrollbar {
+    width: 8px;
+}
+
+.gaenity-chat-window::-webkit-scrollbar-track {
+    background: var(--gaenity-bg-tertiary);
+    border-radius: var(--gaenity-radius);
+}
+
+.gaenity-chat-window::-webkit-scrollbar-thumb {
+    background: var(--gaenity-primary);
+    border-radius: var(--gaenity-radius);
+}
+
+.gaenity-chat-window::-webkit-scrollbar-thumb:hover {
+    background: var(--gaenity-primary-dark);
+}
+
+.gaenity-chat-messages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.gaenity-chat-messages li {
+    animation: gaenitySlideInRight 0.3s ease-out;
+}
+
+.gaenity-chat-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.gaenity-chat-meta strong {
+    color: var(--gaenity-text-primary);
+    font-weight: 700;
+}
+
+.gaenity-chat-timestamp {
+    color: var(--gaenity-text-muted);
+    font-size: 0.875rem;
+}
+
+.gaenity-chat-body {
+    background: var(--gaenity-bg-primary);
+    border-radius: var(--gaenity-radius-md);
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--gaenity-border);
+    box-shadow: var(--gaenity-shadow-sm);
+}
+
+.gaenity-chat-body p {
+    margin: 0;
+    color: var(--gaenity-text-primary);
+    line-height: 1.6;
+}
+
+/* Badges */
+.gaenity-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--gaenity-primary);
+    color: var(--gaenity-bg-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--gaenity-radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+/* Pagination */
+.gaenity-pagination {
+    margin-top: 2.5rem;
+}
+
+.gaenity-pagination ul {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gaenity-pagination a,
+.gaenity-pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border-radius: var(--gaenity-radius-md);
+    border: 2px solid var(--gaenity-border);
+    background: var(--gaenity-bg-primary);
+    color: var(--gaenity-text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--gaenity-transition-fast);
+}
+
+.gaenity-pagination a:hover {
+    border-color: var(--gaenity-primary);
+    color: var(--gaenity-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--gaenity-shadow);
+}
+
+.gaenity-pagination .current {
+    background: var(--gaenity-primary);
+    color: var(--gaenity-bg-primary);
+    border-color: var(--gaenity-primary);
+    box-shadow: var(--gaenity-shadow-md);
+}
+
+.gaenity-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    align-items: flex-start; /* Changed from center */
+    justify-content: center;
+    padding: 1rem;
+    z-index: 99999;
+    overflow-y: auto; /* Enable scroll */
+    backdrop-filter: blur(4px);
+}
+
+.gaenity-modal[hidden] {
+    display: none;
+}
+
+.gaenity-modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 16px;
+    max-width: 520px;
+    width: 100%;
+    position: relative;
+    max-height: calc(100vh - 2rem); /* Limit height */
+    overflow-y: auto; /* Enable internal scroll */
+    margin: 1rem auto; /* Center with margin */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.gaenity-modal-close {
+    position: sticky; /* Changed from absolute */
+    top: 0;
+    right: 0;
+    float: right; /* Float to top-right */
+    background: #f1f5f9;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.2s ease;
+    z-index: 10;
+    margin-bottom: 1rem;
+}
+
+.gaenity-modal-close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: rotate(90deg);
+}
+
+.gaenity-modal h3 {
+    clear: both; /* Clear the float */
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: #1e293b;
+}
+
+/* Fix form elements in modal */
+.gaenity-modal .gaenity-form {
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    background: transparent;
+    max-width: 100%;
+    margin: 0;
+}
+
+.gaenity-modal .gaenity-form p {
+    margin-bottom: 1.25rem;
+}
+
+.gaenity-modal .gaenity-form label {
+    font-size: 0.95rem;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-weight: 600;
+}
+
+.gaenity-modal .gaenity-form input,
+.gaenity-modal .gaenity-form select {
+    font-size: 1rem;
+    padding: 0.75rem;
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+.gaenity-modal .gaenity-form input:focus,
+.gaenity-modal .gaenity-form select:focus {
+    outline: none;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+}
+
+.gaenity-modal .gaenity-checkbox {
+    margin-top: 1rem;
+}
+
+.gaenity-modal .gaenity-checkbox label {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #64748b;
+    font-weight: 400;
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.gaenity-modal .gaenity-checkbox input[type="checkbox"] {
+    margin-top: 0.25rem;
+    width: auto;
+    flex-shrink: 0;
+}
+
+.gaenity-modal .gaenity-button {
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.gaenity-modal .gaenity-form-feedback {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.gaenity-modal .gaenity-form-feedback.gaenity-error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* Smooth scroll for modal content */
+.gaenity-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.gaenity-modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.gaenity-modal-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.gaenity-modal-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.gaenity-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+    .gaenity-modal {
+        padding: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .gaenity-modal-content {
+        padding: 1.5rem;
+        border-radius: 12px;
+        max-height: calc(100vh - 1rem);
+        width: 100%;
+        margin: 0.5rem auto;
+    }
+    
+    .gaenity-modal h3 {
+        font-size: 1.25rem;
+    }
+    
+    .gaenity-modal-close {
+        width: 36px;
+        height: 36px;
+        font-size: 1.25rem;
+    }
+}
+
+/* Prevent body scroll when modal is open */
+body.gaenity-modal-open {
+    overflow: hidden;
+}
+
+/* Animations */
+@keyframes gaenityFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes gaenityFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gaenitySlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gaenitySlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes gaenityScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .gaenity-form {
+        padding: 1.5rem;
+    }
+    
+    .gaenity-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .gaenity-filters label {
+        min-width: 100%;
+    }
+    
+    .gaenity-resource-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .gaenity-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .gaenity-section-header h2 {
+        font-size: 1.75rem;
+    }
+    
+    .gaenity-modal-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gaenity-button {
+        width: 100%;
+    }
+    
+    .gaenity-resource-tabs {
+        flex-direction: column;
+    }
+    
+    .gaenity-resource-tab {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gaenity-text-primary: #f1f5f9;
+        --gaenity-text-secondary: #cbd5e1;
+        --gaenity-text-muted: #94a3b8;
+        
+        --gaenity-bg-primary: #1e293b;
+        --gaenity-bg-secondary: #0f172a;
+        --gaenity-bg-tertiary: #334155;
+        
+        --gaenity-border: #334155;
+        --gaenity-border-light: #475569;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .gaenity-modal,
+    .gaenity-button,
+    .gaenity-chat,
+    .gaenity-filters {
+        display: none;
+    }
+}
+/* ============================================
+   Enhanced Community Home Styles
+   ============================================ */
+
+.gaenity-home-header {
+    background: linear-gradient(135deg, rgba(29, 78, 216, 0.05), rgba(139, 92, 246, 0.05));
+    border-radius: 16px;
+    padding: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 2.5rem;
+}
+
+.gaenity-home-intro h2 {
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    margin-bottom: 0.75rem;
+    color: #1a202c;
+}
+
+.gaenity-home-intro p {
+    font-size: 1.1rem;
+    color: #4a5568;
+    max-width: 800px;
+    line-height: 1.7;
+}
+
+.gaenity-home-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin: 2rem 0;
+}
+
+.gaenity-stat-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gaenity-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.gaenity-stat-icon {
+    font-size: 2rem;
+}
+
+.gaenity-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a202c;
+    line-height: 1;
+}
+
+.gaenity-stat-label {
+    font-size: 0.85rem;
+    color: #718096;
+    margin-top: 0.25rem;
+}
+
+.gaenity-cta-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.gaenity-button-icon {
+    margin-right: 0.5rem;
+}
+
+.gaenity-forum-structure {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+}
+
+.gaenity-forum-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.gaenity-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f7fafc;
+}
+
+.gaenity-section-icon {
+    font-size: 1.5rem;
+}
+
+.gaenity-section-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #2d3748;
+}
+
+.gaenity-quick-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.gaenity-quick-links li a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: #4a5568;
+    text-decoration: none;
+}
+
+.gaenity-quick-links li a:hover {
+    background: #f7fafc;
+    color: #1d4ed8;
+    transform: translateX(4px);
+}
+
+.gaenity-link-icon {
+    font-size: 1.2rem;
+}
+
+.gaenity-topic-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.4rem;
+}
+
+.gaenity-topic-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: #4a5568;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.gaenity-topic-link:hover {
+    background: linear-gradient(135deg, rgba(29, 78, 216, 0.05), rgba(139, 92, 246, 0.05));
+    border-color: rgba(29, 78, 216, 0.2);
+    color: #1d4ed8;
+}
+
+.gaenity-topic-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.gaenity-topic-count {
+    background: #e2e8f0;
+    color: #4a5568;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 28px;
+    text-align: center;
+}
+
+.gaenity-topic-link:hover .gaenity-topic-count {
+    background: #1d4ed8;
+    color: #fff;
+}
+
+.gaenity-recent-activity {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+
+.gaenity-recent-activity h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    color: #1a202c;
+}
+
+.gaenity-recent-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.gaenity-recent-item {
+    display: block;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.gaenity-recent-item:hover {
+    border-color: #1d4ed8;
+    background: #f8fafc;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.1);
+}
+
+.gaenity-recent-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.gaenity-recent-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.gaenity-meta-badge {
+    background: #edf2f7;
+    color: #4a5568;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.gaenity-meta-date {
+    color: #718096;
+}
+
+.gaenity-view-all {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .gaenity-forum-structure {
+        grid-template-columns: 1fr;
+    }
+
+    .gaenity-cta-group {
+        flex-direction: column;
+    }
+
+    .gaenity-cta-group .gaenity-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+.gaenity-resource-pricing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.gaenity-resource-price {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    display: block;
+}

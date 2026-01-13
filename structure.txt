@@ -1,0 +1,38 @@
+Folder PATH listing
+Volume serial number is FC6B-FA6F
+C:.
+|   archive-gaenity_discussion.php
+|   gaenity-community.php
+|   gaenity-community.zip
+|   README.md
+|   structure.txt
+|   
++---assets
+|   +---css
+|   |       frontend copy.css
+|   |       frontend.css
+|   |       support-hub.css
+|   |       
+|   \---js
+|           frontend.js
+|           support-hub.js
+|           
++---includes
+|       archive-gaenity_discussion.php
+|       class-gaenity-community-plugin copy.php
+|       class-gaenity-community-plugin.php
+|       class-gaenity-elementor-widget.php
+|       class-gaenity-support-hub-elementor-widget.php
+|       class-gaenity-support-hub.php
+|       
+\---templates
+        archive-gaenity_discussion copy.php
+        archive-gaenity_discussion.php
+        comments copy 2.php
+        comments copy.php
+        comments.php
+        documentation.php
+        single-gaenity_discussion copy 2.php
+        single-gaenity_discussion copy.php
+        single-gaenity_discussion.php
+        
