@@ -5234,6 +5234,20 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             $download = get_post_meta( $resource_id, '_gaenity_resource_file', true );
         }
 
+        // Send email notification
+        $user_name = explode( '@', $email )[0];
+        $resource_title = get_the_title( $resource_id );
+
+        $this->send_resource_email(
+            'free',
+            array(
+                'email'          => $email,
+                'user_name'      => ucfirst( $user_name ),
+                'resource_title' => $resource_title,
+                'download_link'  => $download,
+            )
+        );
+
         wp_send_json_success(
             array(
                 'message'      => __( 'Thanks! Your download will begin shortly.', 'gaenity-community' ),
@@ -5318,8 +5332,12 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 array( '%s' )
             );
 
-            // Grant access to the resource with 30-day expiration
-            $expires_at = gmdate( 'Y-m-d H:i:s', strtotime( '+30 days' ) );
+            // Get configurable expiry and limit settings
+            $expiry_days = absint( get_option( 'gaenity_download_expiry_days', 30 ) );
+            $download_limit = absint( get_option( 'gaenity_download_limit', 3 ) );
+
+            // Grant access to the resource with configurable expiration
+            $expires_at = gmdate( 'Y-m-d H:i:s', strtotime( "+{$expiry_days} days" ) );
 
             $wpdb->insert(
                 $wpdb->prefix . 'gaenity_paid_resource_access',
@@ -5332,7 +5350,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                     'region'           => $region,
                     'industry'         => $industry,
                     'download_count'   => 0,
-                    'max_downloads'    => 3,
+                    'max_downloads'    => $download_limit,
                     'expires_at'       => $expires_at,
                 ),
                 array( '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s' )
@@ -5341,6 +5359,24 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             // Get download URL
             $download_url = get_post_meta( $resource_id, '_gaenity_resource_file', true );
 
+            // Send email notification
+            $user_name = explode( '@', $email )[0];
+            $resource_title = get_the_title( $resource_id );
+
+            $this->send_resource_email(
+                'paid',
+                array(
+                    'email'          => $email,
+                    'user_name'      => ucfirst( $user_name ),
+                    'resource_title' => $resource_title,
+                    'download_link'  => $download_url,
+                    'amount'         => $amount,
+                    'transaction_id' => $transaction_id,
+                    'download_limit' => $download_limit,
+                    'expiry_days'    => $expiry_days,
+                )
+            );
+
             wp_send_json_success(
                 array(
                     'message'      => __( 'Payment successful! Your download will begin shortly.', 'gaenity-community' ),
@@ -5348,6 +5384,8 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 )
             );
         } else {
+            // Even if payment failed, log it for debugging
+            error_log( 'Gaenity Payment Failed: ' . wp_json_encode( $result ) );
             wp_send_json_error( $result );
         }
     }
