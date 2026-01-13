@@ -1953,6 +1953,19 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             update_option( 'gaenity_resources_desc_size', absint( $_POST['gaenity_resources_desc_size'] ) );
             update_option( 'gaenity_resources_font_family', sanitize_text_field( $_POST['gaenity_resources_font_family'] ) );
 
+            // Save download settings
+            update_option( 'gaenity_download_expiry_days', absint( $_POST['gaenity_download_expiry_days'] ) );
+            update_option( 'gaenity_download_limit', absint( $_POST['gaenity_download_limit'] ) );
+
+            // Save email notification settings
+            update_option( 'gaenity_enable_email_notifications', isset( $_POST['gaenity_enable_email_notifications'] ) ? 1 : 0 );
+            update_option( 'gaenity_email_from_name', sanitize_text_field( $_POST['gaenity_email_from_name'] ) );
+            update_option( 'gaenity_email_from_email', sanitize_email( $_POST['gaenity_email_from_email'] ) );
+            update_option( 'gaenity_free_resource_email_subject', sanitize_text_field( $_POST['gaenity_free_resource_email_subject'] ) );
+            update_option( 'gaenity_free_resource_email_body', wp_kses_post( $_POST['gaenity_free_resource_email_body'] ) );
+            update_option( 'gaenity_paid_resource_email_subject', sanitize_text_field( $_POST['gaenity_paid_resource_email_subject'] ) );
+            update_option( 'gaenity_paid_resource_email_body', wp_kses_post( $_POST['gaenity_paid_resource_email_body'] ) );
+
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings saved successfully!', 'gaenity-community' ) . '</p></div>';
         }
 
@@ -2317,6 +2330,121 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                         <td>
                             <textarea id="gaenity_bank_details" name="gaenity_bank_details" rows="6" class="large-text"><?php echo esc_textarea( get_option( 'gaenity_bank_details', '' ) ); ?></textarea>
                             <p class="description"><?php esc_html_e( 'Enter your bank account details that will be shown to customers', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2><?php esc_html_e( 'Download Settings', 'gaenity-community' ); ?></h2>
+                <p><?php esc_html_e( 'Configure download expiry and access limits for resources.', 'gaenity-community' ); ?></p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_download_expiry_days"><?php esc_html_e( 'Download Expiry (Days)', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_download_expiry_days" name="gaenity_download_expiry_days" value="<?php echo esc_attr( get_option( 'gaenity_download_expiry_days', 30 ) ); ?>" min="1" max="365" style="width: 100px;" />
+                            <p class="description"><?php esc_html_e( 'Number of days users can access paid resources after purchase (1-365 days)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_download_limit"><?php esc_html_e( 'Download Limit', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_download_limit" name="gaenity_download_limit" value="<?php echo esc_attr( get_option( 'gaenity_download_limit', 3 ) ); ?>" min="1" max="100" style="width: 100px;" />
+                            <p class="description"><?php esc_html_e( 'Maximum number of downloads allowed per purchase (1-100)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2><?php esc_html_e( 'Email Notifications', 'gaenity-community' ); ?></h2>
+                <p><?php esc_html_e( 'Customize email notifications sent to users after resource downloads and purchases.', 'gaenity-community' ); ?></p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_enable_email_notifications"><?php esc_html_e( 'Enable Email Notifications', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="gaenity_enable_email_notifications" name="gaenity_enable_email_notifications" value="1" <?php checked( get_option( 'gaenity_enable_email_notifications', 1 ), 1 ); ?> />
+                                <?php esc_html_e( 'Send email notifications to users', 'gaenity-community' ); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_email_from_name"><?php esc_html_e( 'From Name', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_email_from_name" name="gaenity_email_from_name" value="<?php echo esc_attr( get_option( 'gaenity_email_from_name', get_bloginfo( 'name' ) ) ); ?>" class="regular-text" />
+                            <p class="description"><?php esc_html_e( 'The sender name for notification emails', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_email_from_email"><?php esc_html_e( 'From Email', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="email" id="gaenity_email_from_email" name="gaenity_email_from_email" value="<?php echo esc_attr( get_option( 'gaenity_email_from_email', get_option( 'admin_email' ) ) ); ?>" class="regular-text" />
+                            <p class="description"><?php esc_html_e( 'The sender email address for notification emails', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+
+                    <!-- Free Resource Email -->
+                    <tr>
+                        <th colspan="2" style="background: #f0f0f1; padding: 10px;">
+                            <h3 style="margin: 0;"><?php esc_html_e( 'Free Resource Download Email', 'gaenity-community' ); ?></h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_free_resource_email_subject"><?php esc_html_e( 'Email Subject', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_free_resource_email_subject" name="gaenity_free_resource_email_subject" value="<?php echo esc_attr( get_option( 'gaenity_free_resource_email_subject', 'Your Free Resource is Ready!' ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'Available variables: {resource_title}, {user_name}, {site_name}', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_free_resource_email_body"><?php esc_html_e( 'Email Body', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            $free_body_default = "Hi {user_name},\n\nThank you for downloading {resource_title}!\n\nClick the button below to access your resource:\n\n{download_button}\n\nBest regards,\n{site_name} Team";
+                            ?>
+                            <textarea id="gaenity_free_resource_email_body" name="gaenity_free_resource_email_body" rows="10" class="large-text"><?php echo esc_textarea( get_option( 'gaenity_free_resource_email_body', $free_body_default ) ); ?></textarea>
+                            <p class="description"><?php esc_html_e( 'Available variables: {user_name}, {resource_title}, {download_button}, {download_link}, {site_name}', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+
+                    <!-- Paid Resource Email -->
+                    <tr>
+                        <th colspan="2" style="background: #f0f0f1; padding: 10px;">
+                            <h3 style="margin: 0;"><?php esc_html_e( 'Paid Resource Purchase Email', 'gaenity-community' ); ?></h3>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_paid_resource_email_subject"><?php esc_html_e( 'Email Subject', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_paid_resource_email_subject" name="gaenity_paid_resource_email_subject" value="<?php echo esc_attr( get_option( 'gaenity_paid_resource_email_subject', 'Payment Successful - Access Your Resource' ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'Available variables: {resource_title}, {user_name}, {amount}, {transaction_id}, {site_name}', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_paid_resource_email_body"><?php esc_html_e( 'Email Body', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            $paid_body_default = "Hi {user_name},\n\nThank you for your purchase of {resource_title}!\n\nPayment Details:\nAmount: {amount}\nTransaction ID: {transaction_id}\n\nClick the button below to access your resource:\n\n{download_button}\n\nYou have {download_limit} downloads available, and access will expire in {expiry_days} days.\n\nBest regards,\n{site_name} Team";
+                            ?>
+                            <textarea id="gaenity_paid_resource_email_body" name="gaenity_paid_resource_email_body" rows="12" class="large-text"><?php echo esc_textarea( get_option( 'gaenity_paid_resource_email_body', $paid_body_default ) ); ?></textarea>
+                            <p class="description"><?php esc_html_e( 'Available variables: {user_name}, {resource_title}, {amount}, {transaction_id}, {download_button}, {download_link}, {download_limit}, {expiry_days}, {site_name}', 'gaenity-community' ); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -4810,14 +4938,73 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         $currency = get_option( 'gaenity_currency', 'USD' );
         $symbols = array(
             'USD' => '$',
-            'EUR' => 'â‚¬',
-            'GBP' => 'Â£',
-            'NGN' => 'â‚¦',
+            'EUR' => '€',
+            'GBP' => '£',
+            'NGN' => '₦',
             'ZAR' => 'R',
             'KES' => 'KSh',
         );
         return isset( $symbols[ $currency ] ) ? $symbols[ $currency ] : $currency . ' ';
     }
+
+    /**
+     * Send email notification with variable replacement.
+     */
+    protected function send_resource_email( $type, $data ) {
+        // Check if email notifications are enabled
+        if ( ! get_option( 'gaenity_enable_email_notifications', 1 ) ) {
+            return false;
+        }
+
+        // Get email settings
+        $from_name = get_option( 'gaenity_email_from_name', get_bloginfo( 'name' ) );
+        $from_email = get_option( 'gaenity_email_from_email', get_option( 'admin_email' ) );
+
+        // Get template based on type
+        if ( 'free' === $type ) {
+            $subject_template = get_option( 'gaenity_free_resource_email_subject', 'Your Free Resource is Ready!' );
+            $body_template = get_option( 'gaenity_free_resource_email_body', "Hi {user_name},\n\nThank you for downloading {resource_title}!\n\nClick the button below to access your resource:\n\n{download_button}\n\nBest regards,\n{site_name} Team" );
+        } else {
+            $subject_template = get_option( 'gaenity_paid_resource_email_subject', 'Payment Successful - Access Your Resource' );
+            $body_template = get_option( 'gaenity_paid_resource_email_body', "Hi {user_name},\n\nThank you for your purchase of {resource_title}!\n\nPayment Details:\nAmount: {amount}\nTransaction ID: {transaction_id}\n\nClick the button below to access your resource:\n\n{download_button}\n\nYou have {download_limit} downloads available, and access will expire in {expiry_days} days.\n\nBest regards,\n{site_name} Team" );
+        }
+
+        // Create download button HTML
+        $download_button = '<div style="text-align: center; margin: 30px 0;">';
+        $download_button .= '<a href="' . esc_url( $data['download_link'] ) . '" style="background: #2563eb; color: #fff; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">Download Resource</a>';
+        $download_button .= '</div>';
+
+        // Replace variables
+        $variables = array(
+            '{user_name}'       => isset( $data['user_name'] ) ? $data['user_name'] : 'Valued User',
+            '{resource_title}'  => isset( $data['resource_title'] ) ? $data['resource_title'] : '',
+            '{download_link}'   => isset( $data['download_link'] ) ? $data['download_link'] : '',
+            '{download_button}' => $download_button,
+            '{site_name}'       => get_bloginfo( 'name' ),
+            '{amount}'          => isset( $data['amount'] ) ? $this->get_currency_symbol() . number_format( $data['amount'], 2 ) : '',
+            '{transaction_id}'  => isset( $data['transaction_id'] ) ? $data['transaction_id'] : '',
+            '{download_limit}'  => isset( $data['download_limit'] ) ? $data['download_limit'] : get_option( 'gaenity_download_limit', 3 ),
+            '{expiry_days}'     => isset( $data['expiry_days'] ) ? $data['expiry_days'] : get_option( 'gaenity_download_expiry_days', 30 ),
+        );
+
+        $subject = str_replace( array_keys( $variables ), array_values( $variables ), $subject_template );
+        $body = str_replace( array_keys( $variables ), array_values( $variables ), $body_template );
+
+        // Convert newlines to HTML breaks and wrap in basic HTML template
+        $body_html = '<html><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">';
+        $body_html .= nl2br( $body );
+        $body_html .= '</body></html>';
+
+        // Set headers
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $from_name . ' <' . $from_email . '>',
+        );
+
+        // Send email
+        return wp_mail( $data['email'], $subject, $body_html, $headers );
+    }
+
     /**
      * Render expert directory.
      */
