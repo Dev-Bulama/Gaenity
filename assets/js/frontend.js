@@ -15,6 +15,28 @@
         });
     });
 
+    // Paid resource modal triggers
+    const paidModalTriggers = document.querySelectorAll('[data-paid-resource]');
+    paidModalTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            const resourceId = trigger.getAttribute('data-paid-resource');
+            const modal = document.getElementById(`gaenity-paid-resource-modal-${resourceId}`);
+            if (modal) {
+                modal.removeAttribute('hidden');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+
+                // Focus first input in modal
+                setTimeout(() => {
+                    const firstInput = modal.querySelector('input, select, textarea');
+                    if (firstInput) {
+                        firstInput.focus();
+                    }
+                }, 100);
+            }
+        });
+    });
+
     // Modal close handlers with body scroll lock
     document.addEventListener('click', (event) => {
         const target = event.target;

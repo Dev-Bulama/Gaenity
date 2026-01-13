@@ -251,6 +251,31 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
 
         dbDelta( $sql_votes_discussion );
 
+        // Paid resource access table with download expiration
+        $paid_access_table = $wpdb->prefix . 'gaenity_paid_resource_access';
+        $sql_paid_access   = "CREATE TABLE $paid_access_table (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            resource_id BIGINT(20) UNSIGNED NOT NULL,
+            transaction_id VARCHAR(255) NOT NULL,
+            user_id BIGINT(20) UNSIGNED NULL,
+            email VARCHAR(255) NOT NULL,
+            role VARCHAR(100) DEFAULT '' NOT NULL,
+            region VARCHAR(100) DEFAULT '' NOT NULL,
+            industry VARCHAR(191) DEFAULT '' NOT NULL,
+            download_count INT UNSIGNED DEFAULT 0 NOT NULL,
+            max_downloads INT UNSIGNED DEFAULT 3 NOT NULL,
+            expires_at DATETIME NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_downloaded_at DATETIME NULL,
+            PRIMARY KEY  (id),
+            KEY resource_id (resource_id),
+            KEY transaction_id (transaction_id),
+            KEY email (email),
+            KEY expires_at (expires_at)
+        ) $charset_collate;";
+
+        dbDelta( $sql_paid_access );
+
     }
 
     /**
@@ -1919,7 +1944,15 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             update_option( 'gaenity_expert_directory_url', esc_url_raw( $_POST['gaenity_expert_directory_url'] ) );
             update_option( 'gaenity_polls_url', esc_url_raw( $_POST['gaenity_polls_url'] ) );
             update_option( 'gaenity_courses_url', esc_url_raw( $_POST['gaenity_courses_url'] ) );
-            
+
+            // Save resource section customization
+            update_option( 'gaenity_resources_title', sanitize_text_field( $_POST['gaenity_resources_title'] ) );
+            update_option( 'gaenity_resources_description', sanitize_textarea_field( $_POST['gaenity_resources_description'] ) );
+            update_option( 'gaenity_resources_title_color', sanitize_hex_color( $_POST['gaenity_resources_title_color'] ) );
+            update_option( 'gaenity_resources_title_size', absint( $_POST['gaenity_resources_title_size'] ) );
+            update_option( 'gaenity_resources_desc_size', absint( $_POST['gaenity_resources_desc_size'] ) );
+            update_option( 'gaenity_resources_font_family', sanitize_text_field( $_POST['gaenity_resources_font_family'] ) );
+
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings saved successfully!', 'gaenity-community' ) . '</p></div>';
         }
 
@@ -2040,6 +2073,83 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                         <td>
                             <input type="url" id="gaenity_courses_url" name="gaenity_courses_url" value="<?php echo esc_attr( get_option( 'gaenity_courses_url', '' ) ); ?>" class="regular-text" placeholder="<?php echo esc_attr( home_url( '/courses' ) ); ?>" />
                             <p class="description"><?php esc_html_e( 'URL for enablement courses page', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
+                <h2><?php esc_html_e( 'Resource Section Customization', 'gaenity-community' ); ?></h2>
+                <p><?php esc_html_e( 'Customize the appearance of the resource section header.', 'gaenity-community' ); ?></p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_title"><?php esc_html_e( 'Section Title', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_resources_title" name="gaenity_resources_title" value="<?php echo esc_attr( get_option( 'gaenity_resources_title', 'Practical tools that turn ideas into action.' ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'The main heading for the resources section', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_description"><?php esc_html_e( 'Section Description', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <textarea id="gaenity_resources_description" name="gaenity_resources_description" rows="3" class="large-text"><?php echo esc_textarea( get_option( 'gaenity_resources_description', 'From risk management checklists to finance enablement guides and operational templates, each resource is designed to help businesses build resilience, prepare for growth, and make measurable progress.' ) ); ?></textarea>
+                            <p class="description"><?php esc_html_e( 'The description text below the heading', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_title_color"><?php esc_html_e( 'Title Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_resources_title_color" name="gaenity_resources_title_color" value="<?php echo esc_attr( get_option( 'gaenity_resources_title_color', '#2563eb' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Color for the section title (will be used in gradient)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_title_size"><?php esc_html_e( 'Title Font Size', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_resources_title_size" name="gaenity_resources_title_size" value="<?php echo esc_attr( get_option( 'gaenity_resources_title_size', 40 ) ); ?>" min="16" max="72" step="2" style="width: 80px;" /> px
+                            <p class="description"><?php esc_html_e( 'Font size for the section title (16-72px)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_desc_size"><?php esc_html_e( 'Description Font Size', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_resources_desc_size" name="gaenity_resources_desc_size" value="<?php echo esc_attr( get_option( 'gaenity_resources_desc_size', 18 ) ); ?>" min="12" max="32" step="1" style="width: 80px;" /> px
+                            <p class="description"><?php esc_html_e( 'Font size for the description text (12-32px)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_resources_font_family"><?php esc_html_e( 'Font Family', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <select id="gaenity_resources_font_family" name="gaenity_resources_font_family">
+                                <?php
+                                $current_font = get_option( 'gaenity_resources_font_family', 'system' );
+                                $fonts = array(
+                                    'system' => 'System Font (Default)',
+                                    'Arial, sans-serif' => 'Arial',
+                                    'Georgia, serif' => 'Georgia',
+                                    'Times New Roman, serif' => 'Times New Roman',
+                                    'Courier New, monospace' => 'Courier New',
+                                    'Verdana, sans-serif' => 'Verdana',
+                                    'Trebuchet MS, sans-serif' => 'Trebuchet MS',
+                                    'Impact, sans-serif' => 'Impact',
+                                );
+                                foreach ( $fonts as $value => $label ) {
+                                    printf( '<option value="%s" %s>%s</option>', esc_attr( $value ), selected( $current_font, $value, false ), esc_html( $label ) );
+                                }
+                                ?>
+                            </select>
+                            <p class="description"><?php esc_html_e( 'Font family for the resource section', 'gaenity-community' ); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -4876,6 +4986,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
     protected function register_ajax_actions() {
         $actions = array(
             'gaenity_resource_download' => 'handle_resource_download',
+            'gaenity_paid_resource_purchase' => 'handle_paid_resource_purchase',
             'gaenity_user_register'     => 'handle_user_registration',
             'gaenity_user_login'        => 'handle_user_login',
             'gaenity_discussion_submit' => 'handle_discussion_submit',
@@ -4904,12 +5015,13 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         $resource_id = isset( $_POST['resource_id'] ) ? absint( $_POST['resource_id'] ) : 0;
         $email       = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
         $role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+        $region      = isset( $_POST['region'] ) ? sanitize_text_field( wp_unslash( $_POST['region'] ) ) : '';
         $industry    = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
         $other       = isset( $_POST['industry_other'] ) ? sanitize_text_field( wp_unslash( $_POST['industry_other'] ) ) : '';
         $consent     = isset( $_POST['consent'] ) ? 1 : 0;
         $download    = isset( $_POST['download_url'] ) ? esc_url_raw( wp_unslash( $_POST['download_url'] ) ) : '';
 
-        if ( empty( $resource_id ) || empty( $email ) || empty( $role ) || empty( $industry ) ) {
+        if ( empty( $resource_id ) || empty( $email ) || empty( $role ) || empty( $region ) || empty( $industry ) ) {
             wp_send_json_error( array( 'message' => __( 'Please complete all required fields.', 'gaenity-community' ) ) );
         }
 
@@ -4941,6 +5053,116 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 'download_url' => $download,
             )
         );
+    }
+
+    /**
+     * Handle paid resource purchase with integrated payment processing.
+     */
+    public function handle_paid_resource_purchase() {
+        $this->verify_nonce();
+
+        $resource_id = isset( $_POST['resource_id'] ) ? absint( $_POST['resource_id'] ) : 0;
+        $email       = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+        $role        = isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : '';
+        $region      = isset( $_POST['region'] ) ? sanitize_text_field( wp_unslash( $_POST['region'] ) ) : '';
+        $industry    = isset( $_POST['industry'] ) ? sanitize_text_field( wp_unslash( $_POST['industry'] ) ) : '';
+        $other       = isset( $_POST['industry_other'] ) ? sanitize_text_field( wp_unslash( $_POST['industry_other'] ) ) : '';
+        $amount      = isset( $_POST['amount'] ) ? floatval( $_POST['amount'] ) : 0;
+        $currency    = isset( $_POST['currency'] ) ? sanitize_text_field( $_POST['currency'] ) : 'USD';
+        $gateway     = isset( $_POST['payment_gateway'] ) ? sanitize_text_field( $_POST['payment_gateway'] ) : '';
+        $consent     = isset( $_POST['consent'] ) ? 1 : 0;
+
+        if ( empty( $resource_id ) || empty( $email ) || empty( $role ) || empty( $region ) || empty( $industry ) || empty( $gateway ) || $amount <= 0 ) {
+            wp_send_json_error( array( 'message' => __( 'Please complete all required fields.', 'gaenity-community' ) ) );
+        }
+
+        if ( 'other' === strtolower( $industry ) && ! empty( $other ) ) {
+            $industry = $other;
+        }
+
+        global $wpdb;
+        $user_id = get_current_user_id();
+
+        // Create transaction record
+        $transaction_id = 'TXN_' . time() . '_' . wp_generate_password( 8, false );
+
+        $wpdb->insert(
+            $wpdb->prefix . 'gaenity_transactions',
+            array(
+                'user_id'        => $user_id,
+                'email'          => $email,
+                'item_type'      => 'resource',
+                'item_id'        => $resource_id,
+                'amount'         => $amount,
+                'currency'       => $currency,
+                'gateway'        => $gateway,
+                'transaction_id' => $transaction_id,
+                'status'         => 'pending',
+            ),
+            array( '%d', '%s', '%s', '%d', '%f', '%s', '%s', '%s', '%s' )
+        );
+
+        // Process payment based on gateway
+        switch ( $gateway ) {
+            case 'stripe':
+                $result = $this->process_stripe_payment( $transaction_id, $amount, $currency, $email, $resource_id );
+                break;
+            case 'paypal':
+                $result = $this->process_paypal_payment( $transaction_id, $amount, $currency, $email, $resource_id );
+                break;
+            case 'paystack':
+                $result = $this->process_paystack_payment( $transaction_id, $amount, $currency, $email, $resource_id );
+                break;
+            case 'bank_transfer':
+                $result = $this->process_bank_transfer( $transaction_id, $amount, $currency, $email, $resource_id );
+                break;
+            default:
+                $result = array( 'success' => false, 'message' => __( 'Invalid payment gateway.', 'gaenity-community' ) );
+        }
+
+        // If payment is successful, grant access to the resource
+        if ( $result['success'] ) {
+            // Update transaction status
+            $wpdb->update(
+                $wpdb->prefix . 'gaenity_transactions',
+                array( 'status' => 'completed' ),
+                array( 'transaction_id' => $transaction_id ),
+                array( '%s' ),
+                array( '%s' )
+            );
+
+            // Grant access to the resource with 30-day expiration
+            $expires_at = gmdate( 'Y-m-d H:i:s', strtotime( '+30 days' ) );
+
+            $wpdb->insert(
+                $wpdb->prefix . 'gaenity_paid_resource_access',
+                array(
+                    'resource_id'      => $resource_id,
+                    'transaction_id'   => $transaction_id,
+                    'user_id'          => $user_id,
+                    'email'            => $email,
+                    'role'             => $role,
+                    'region'           => $region,
+                    'industry'         => $industry,
+                    'download_count'   => 0,
+                    'max_downloads'    => 3,
+                    'expires_at'       => $expires_at,
+                ),
+                array( '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s' )
+            );
+
+            // Get download URL
+            $download_url = get_post_meta( $resource_id, '_gaenity_resource_file', true );
+
+            wp_send_json_success(
+                array(
+                    'message'      => __( 'Payment successful! Your download will begin shortly.', 'gaenity-community' ),
+                    'download_url' => $download_url,
+                )
+            );
+        } else {
+            wp_send_json_error( $result );
+        }
     }
 
     /**
@@ -5517,10 +5739,32 @@ $wpdb->insert(
             $resource_types = array( $atts['type'] );
         }
 
-        $output  = '<div class="gaenity-resources-section">';
+        // Get customization options
+        $title = get_option( 'gaenity_resources_title', 'Practical tools that turn ideas into action.' );
+        $description = get_option( 'gaenity_resources_description', 'From risk management checklists to finance enablement guides and operational templates, each resource is designed to help businesses build resilience, prepare for growth, and make measurable progress.' );
+        $title_color = get_option( 'gaenity_resources_title_color', '#2563eb' );
+        $title_size = get_option( 'gaenity_resources_title_size', 40 );
+        $desc_size = get_option( 'gaenity_resources_desc_size', 18 );
+        $font_family = get_option( 'gaenity_resources_font_family', 'system' );
+
+        // Build inline styles for customization
+        $section_style = '';
+        if ( 'system' !== $font_family ) {
+            $section_style = 'style="font-family: ' . esc_attr( $font_family ) . ';"';
+        }
+
+        $title_style = 'style="';
+        $title_style .= 'font-size: ' . esc_attr( $title_size ) . 'px; ';
+        $title_style .= 'background: linear-gradient(135deg, ' . esc_attr( $title_color ) . ', ' . esc_attr( get_option( 'gaenity_secondary_color', '#8b5cf6' ) ) . '); ';
+        $title_style .= '-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;';
+        $title_style .= '"';
+
+        $desc_style = 'style="font-size: ' . esc_attr( $desc_size ) . 'px;"';
+
+        $output  = '<div class="gaenity-resources-section" ' . $section_style . '>';
         $output .= '<div class="gaenity-section-header">';
-        $output .= '<h2>' . esc_html__( 'Practical tools that turn ideas into action.', 'gaenity-community' ) . '</h2>';
-        $output .= '<p>' . esc_html__( 'From risk management checklists to finance enablement guides and operational templates, each resource is designed to help businesses build resilience, prepare for growth, and make measurable progress.', 'gaenity-community' ) . '</p>';
+        $output .= '<h2 ' . $title_style . '>' . esc_html( $title ) . '</h2>';
+        $output .= '<p ' . $desc_style . '>' . esc_html( $description ) . '</p>';
         $output .= '<div class="gaenity-resource-tabs">';
         foreach ( array( 'free' => __( 'Free Resources', 'gaenity-community' ), 'paid' => __( 'Paid Resources', 'gaenity-community' ) ) as $key => $label ) {
             $output .= '<button class="gaenity-resource-tab" data-target="gaenity-resources-' . esc_attr( $key ) . '">' . esc_html( $label ) . '</button>';
@@ -5569,10 +5813,10 @@ $wpdb->insert(
                             $price = 0;
                         }
                         $currency_symbol = $this->get_currency_symbol();
-                        
+
                         $output .= '<div class="gaenity-resource-pricing">';
                         $output .= '<span class="gaenity-resource-price">' . esc_html( $currency_symbol . number_format( $price, 2 ) ) . '</span>';
-                        $output .= '<a href="' . esc_url( add_query_arg( array( 'type' => 'resource', 'resource_id' => $resource_id ), get_option( 'gaenity_checkout_url', home_url( '/checkout' ) ) ) ) . '" class="gaenity-button">' . esc_html__( 'Buy Now', 'gaenity-community' ) . '</a>';
+                        $output .= '<button class="gaenity-button" data-paid-resource="' . esc_attr( $resource_id ) . '">' . esc_html__( 'Buy Now', 'gaenity-community' ) . '</button>';
                         $output .= '</div>';
                     }
                     $output .= '</div>';
@@ -5580,6 +5824,9 @@ $wpdb->insert(
 
                     if ( 'free' === $type && ! empty( $download_url ) ) {
                         $output .= $this->get_resource_form_markup( $resource_id, $download_url );
+                    } elseif ( 'paid' === $type && ! empty( $download_url ) ) {
+                        $price = get_post_meta( $resource_id, '_gaenity_resource_price', true );
+                        $output .= $this->get_paid_resource_form_markup( $resource_id, floatval( $price ) );
                     }
                 }
             } else {
@@ -5634,7 +5881,17 @@ $wpdb->insert(
                         </select>
                     </p>
                     <p>
-                        <label for="gaenity_industry_other_<?php echo esc_attr( $resource_id ); ?>" class="gaenity-hidden">&nbsp;</label>
+                        <label for="gaenity_industry_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Industry', 'gaenity-community' ); ?></label>
+                        <select id="gaenity_industry_<?php echo esc_attr( $resource_id ); ?>" name="industry" required>
+                            <option value=""><?php esc_html_e( 'Select industry', 'gaenity-community' ); ?></option>
+                            <?php foreach ( $industries as $industry_opt ) : ?>
+                                <option value="<?php echo esc_attr( $industry_opt ); ?>"><?php echo esc_html( $industry_opt ); ?></option>
+                            <?php endforeach; ?>
+                            <option value="Other"><?php esc_html_e( 'Other', 'gaenity-community' ); ?></option>
+                        </select>
+                    </p>
+                    <p class="gaenity-hidden">
+                        <label for="gaenity_industry_other_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Please specify', 'gaenity-community' ); ?></label>
                         <input type="text" id="gaenity_industry_other_<?php echo esc_attr( $resource_id ); ?>" name="industry_other" placeholder="<?php esc_attr_e( 'If other, please specify', 'gaenity-community' ); ?>" />
                     </p>
                     <p class="gaenity-checkbox">
@@ -5645,6 +5902,113 @@ $wpdb->insert(
                     </p>
                     <p>
                         <button type="submit" class="gaenity-button"><?php esc_html_e( 'Download', 'gaenity-community' ); ?></button>
+                    </p>
+                    <div class="gaenity-form-feedback" role="alert" aria-live="polite"></div>
+                </form>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Paid resource purchase form markup with payment integration.
+     */
+    protected function get_paid_resource_form_markup( $resource_id, $price ) {
+        $industries = $this->get_industry_options();
+        $currency = get_option( 'gaenity_currency', 'USD' );
+        $currency_symbol = $this->get_currency_symbol();
+        $enabled_gateways = get_option( 'gaenity_enabled_gateways', array() );
+
+        ob_start();
+        ?>
+        <div class="gaenity-modal" id="gaenity-paid-resource-modal-<?php echo esc_attr( $resource_id ); ?>" hidden>
+            <div class="gaenity-modal-content">
+                <button class="gaenity-modal-close" aria-label="<?php esc_attr_e( 'Close', 'gaenity-community' ); ?>">&times;</button>
+                <h3><?php esc_html_e( 'Purchase & Access Resource', 'gaenity-community' ); ?></h3>
+                <div class="gaenity-payment-summary" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;"><?php esc_html_e( 'Total Amount', 'gaenity-community' ); ?></div>
+                    <div style="font-size: 2rem; font-weight: 700; color: #1e293b;"><?php echo esc_html( $currency_symbol . number_format( $price, 2 ) ); ?></div>
+                </div>
+                <form class="gaenity-form gaenity-ajax-form" data-success-message="<?php esc_attr_e( 'Payment successful! Your download will start automatically.', 'gaenity-community' ); ?>">
+                    <input type="hidden" name="action" value="gaenity_paid_resource_purchase" />
+                    <input type="hidden" name="resource_id" value="<?php echo esc_attr( $resource_id ); ?>" />
+                    <input type="hidden" name="amount" value="<?php echo esc_attr( $price ); ?>" />
+                    <input type="hidden" name="currency" value="<?php echo esc_attr( $currency ); ?>" />
+                    <?php wp_nonce_field( 'gaenity-community', 'gaenity_nonce' ); ?>
+
+                    <p>
+                        <label for="gaenity_paid_email_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Email', 'gaenity-community' ); ?></label>
+                        <input type="email" id="gaenity_paid_email_<?php echo esc_attr( $resource_id ); ?>" name="email" required />
+                    </p>
+                    <p>
+                        <label for="gaenity_paid_role_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Role', 'gaenity-community' ); ?></label>
+                        <select id="gaenity_paid_role_<?php echo esc_attr( $resource_id ); ?>" name="role" required>
+                            <option value=""><?php esc_html_e( 'Select role', 'gaenity-community' ); ?></option>
+                            <option value="Business owner"><?php esc_html_e( 'Business owner', 'gaenity-community' ); ?></option>
+                            <option value="Professional"><?php esc_html_e( 'Professional', 'gaenity-community' ); ?></option>
+                        </select>
+                    </p>
+                    <p>
+                        <label for="gaenity_paid_region_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Region', 'gaenity-community' ); ?></label>
+                        <select id="gaenity_paid_region_<?php echo esc_attr( $resource_id ); ?>" name="region" required>
+                            <option value=""><?php esc_html_e( 'Select region', 'gaenity-community' ); ?></option>
+                            <?php foreach ( $this->get_region_options() as $region_opt ) : ?>
+                                <option value="<?php echo esc_attr( $region_opt ); ?>"><?php echo esc_html( $region_opt ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </p>
+                    <p>
+                        <label for="gaenity_paid_industry_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Industry', 'gaenity-community' ); ?></label>
+                        <select id="gaenity_paid_industry_<?php echo esc_attr( $resource_id ); ?>" name="industry" required>
+                            <option value=""><?php esc_html_e( 'Select industry', 'gaenity-community' ); ?></option>
+                            <?php foreach ( $industries as $industry_opt ) : ?>
+                                <option value="<?php echo esc_attr( $industry_opt ); ?>"><?php echo esc_html( $industry_opt ); ?></option>
+                            <?php endforeach; ?>
+                            <option value="Other"><?php esc_html_e( 'Other', 'gaenity-community' ); ?></option>
+                        </select>
+                    </p>
+                    <p class="gaenity-hidden">
+                        <label for="gaenity_paid_industry_other_<?php echo esc_attr( $resource_id ); ?>"><?php esc_html_e( 'Please specify', 'gaenity-community' ); ?></label>
+                        <input type="text" id="gaenity_paid_industry_other_<?php echo esc_attr( $resource_id ); ?>" name="industry_other" placeholder="<?php esc_attr_e( 'If other, please specify', 'gaenity-community' ); ?>" />
+                    </p>
+
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;"><?php esc_html_e( 'Select Payment Method', 'gaenity-community' ); ?></h4>
+                    <div class="gaenity-payment-methods-compact">
+                        <?php if ( in_array( 'stripe', $enabled_gateways, true ) ) : ?>
+                            <label class="gaenity-payment-option">
+                                <input type="radio" name="payment_gateway" value="stripe" required>
+                                <span><?php esc_html_e( 'Credit/Debit Card', 'gaenity-community' ); ?></span>
+                            </label>
+                        <?php endif; ?>
+                        <?php if ( in_array( 'paypal', $enabled_gateways, true ) ) : ?>
+                            <label class="gaenity-payment-option">
+                                <input type="radio" name="payment_gateway" value="paypal" required>
+                                <span><?php esc_html_e( 'PayPal', 'gaenity-community' ); ?></span>
+                            </label>
+                        <?php endif; ?>
+                        <?php if ( in_array( 'paystack', $enabled_gateways, true ) ) : ?>
+                            <label class="gaenity-payment-option">
+                                <input type="radio" name="payment_gateway" value="paystack" required>
+                                <span><?php esc_html_e( 'Paystack', 'gaenity-community' ); ?></span>
+                            </label>
+                        <?php endif; ?>
+                        <?php if ( in_array( 'bank_transfer', $enabled_gateways, true ) ) : ?>
+                            <label class="gaenity-payment-option">
+                                <input type="radio" name="payment_gateway" value="bank_transfer" required>
+                                <span><?php esc_html_e( 'Bank Transfer', 'gaenity-community' ); ?></span>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+
+                    <p class="gaenity-checkbox">
+                        <label>
+                            <input type="checkbox" name="consent" value="1" required />
+                            <?php esc_html_e( 'By purchasing, you agree to our terms and consent to data processing for download delivery. Download access expires 30 days after purchase with maximum 3 downloads.', 'gaenity-community' ); ?>
+                        </label>
+                    </p>
+                    <p>
+                        <button type="submit" class="gaenity-button"><?php esc_html_e( 'Complete Purchase', 'gaenity-community' ); ?></button>
                     </p>
                     <div class="gaenity-form-feedback" role="alert" aria-live="polite"></div>
                 </form>
