@@ -1518,3 +1518,47 @@ body.gaenity-modal-open {
     color: #1d4ed8;
     display: block;
 }
+/* Paid Resource Payment Options */
+.gaenity-payment-methods-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.gaenity-payment-option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.gaenity-payment-option:hover {
+    border-color: var(--gaenity-primary);
+    background: #f8fafc;
+}
+
+.gaenity-payment-option input[type="radio"] {
+    margin-right: 0.75rem;
+    width: auto;
+    cursor: pointer;
+}
+
+.gaenity-payment-option input[type="radio"]:checked + span {
+    font-weight: 600;
+    color: var(--gaenity-primary);
+}
+
+.gaenity-payment-option span {
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.gaenity-payment-summary {
+    animation: gaenityFadeIn 0.5s ease;
+}
+
