@@ -118,8 +118,9 @@
             feedback.classList.remove('gaenity-error');
         }
 
-        // Handle redirect to download page
+        // Handle redirect to download page or payment gateway
         if (data && data.redirect_url) {
+            console.log('Redirecting to:', data.redirect_url);
             const modal = form.closest('.gaenity-modal');
             if (modal) {
                 modal.setAttribute('hidden', 'hidden');
@@ -127,7 +128,7 @@
             }
             setTimeout(() => {
                 window.location.href = data.redirect_url;
-            }, 500);
+            }, 1000);
             return;
         }
 
@@ -202,13 +203,16 @@
         })
             .then((response) => response.json())
             .then((json) => {
+                console.log('Server response:', json);
                 if (json.success) {
                     handleFormSuccess(form, json.data || {});
                 } else {
+                    console.error('Server error:', json);
                     handleFormError(form, json.data?.message || json.message);
                 }
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error('Network error:', error);
                 handleFormError(form);
             });
     });
