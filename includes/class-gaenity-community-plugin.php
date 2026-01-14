@@ -828,7 +828,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         $r = max( 0, min( 255, $r - ( $r * $percent / 100 ) ) );
         $g = max( 0, min( 255, $g - ( $g * $percent / 100 ) ) );
         $b = max( 0, min( 255, $b - ( $b * $percent / 100 ) ) );
-        return '#' . str_pad( dechex( $r ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( $g ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( $b ), 2, '0', STR_PAD_LEFT );
+        return '#' . str_pad( dechex( (int) $r ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( (int) $g ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( (int) $b ), 2, '0', STR_PAD_LEFT );
     }
 
     /**
@@ -845,7 +845,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         $r = max( 0, min( 255, $r + ( ( 255 - $r ) * $percent / 100 ) ) );
         $g = max( 0, min( 255, $g + ( ( 255 - $g ) * $percent / 100 ) ) );
         $b = max( 0, min( 255, $b + ( ( 255 - $b ) * $percent / 100 ) ) );
-        return '#' . str_pad( dechex( $r ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( $g ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( $b ), 2, '0', STR_PAD_LEFT );
+        return '#' . str_pad( dechex( (int) $r ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( (int) $g ), 2, '0', STR_PAD_LEFT ) . str_pad( dechex( (int) $b ), 2, '0', STR_PAD_LEFT );
     }
 
     /**
