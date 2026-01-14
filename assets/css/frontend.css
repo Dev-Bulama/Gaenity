@@ -904,7 +904,7 @@
     align-items: flex-start; /* Changed from center */
     justify-content: center;
     padding: 1rem;
-    z-index: 99999;
+    z-index: 999999 !important;
     overflow-y: auto; /* Enable scroll */
     backdrop-filter: blur(4px);
 }

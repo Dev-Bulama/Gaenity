@@ -265,4 +265,46 @@
         refreshChat();
     }
 
+    // Resource tab switching
+    const resourceTabs = document.querySelectorAll('.gaenity-resource-tab');
+    const resourceGrids = document.querySelectorAll('.gaenity-resource-grid');
+
+    if (resourceTabs.length > 0 && resourceGrids.length > 0) {
+        // Hide all grids except the first one
+        resourceGrids.forEach((grid, index) => {
+            if (index !== 0) {
+                grid.style.display = 'none';
+            }
+        });
+
+        // Mark first tab as active
+        if (resourceTabs[0]) {
+            resourceTabs[0].classList.add('active');
+        }
+
+        // Add click handlers to tabs
+        resourceTabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const targetId = tab.getAttribute('data-target');
+
+                // Remove active class from all tabs
+                resourceTabs.forEach((t) => t.classList.remove('active'));
+
+                // Add active class to clicked tab
+                tab.classList.add('active');
+
+                // Hide all grids
+                resourceGrids.forEach((grid) => {
+                    grid.style.display = 'none';
+                });
+
+                // Show target grid
+                const targetGrid = document.getElementById(targetId);
+                if (targetGrid) {
+                    targetGrid.style.display = 'grid';
+                }
+            });
+        });
+    }
+
 })(jQuery);
