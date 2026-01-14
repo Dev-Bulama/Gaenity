@@ -43,6 +43,7 @@ class Gaeinity_Community_Plugin {
         add_action( 'init', array( $this, 'register_expert_directory' ) );
         add_action( 'init', array( $this, 'register_roles' ) );
         add_action( 'init', array( $this, 'load_textdomain' ) );
+        add_action( 'init', array( $this, 'handle_payment_callback' ) );
         // add_action( 'admin_menu', array( $this, 'add_admin_menu_pages' ) );
         add_filter( 'template_include', array( $this, 'load_plugin_templates' ) );
         // Force comments to be open for discussions
@@ -4888,19 +4889,68 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
      * Process Paystack payment.
      */
     protected function process_paystack_payment( $transaction_id, $amount, $currency, $email, $item_id ) {
-        $public_key = get_option( 'gaenity_paystack_public_key', '' );
-        
-        if ( empty( $public_key ) ) {
-            return array( 'success' => false, 'message' => __( 'Paystack not configured.', 'gaenity-community' ) );
+        $secret_key = get_option( 'gaenity_paystack_secret_key', '' );
+
+        if ( empty( $secret_key ) ) {
+            return array( 'success' => false, 'message' => __( 'Paystack not configured. Please add your secret key in settings.', 'gaenity-community' ) );
         }
 
-        // Generate Paystack payment URL
-        $paystack_url = 'https://checkout.paystack.com/';
-        
+        // Initialize Paystack transaction
+        $callback_url = add_query_arg(
+            array(
+                'gaenity_payment_callback' => '1',
+                'gateway' => 'paystack',
+                'transaction_id' => $transaction_id,
+            ),
+            home_url( '/' )
+        );
+
+        $paystack_data = array(
+            'email' => $email,
+            'amount' => $amount * 100, // Paystack amount is in kobo (multiply by 100)
+            'currency' => $currency,
+            'reference' => $transaction_id,
+            'callback_url' => $callback_url,
+            'metadata' => array(
+                'transaction_id' => $transaction_id,
+                'item_id' => $item_id,
+                'item_type' => 'resource',
+            ),
+        );
+
+        $response = wp_remote_post(
+            'https://api.paystack.co/transaction/initialize',
+            array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $secret_key,
+                    'Content-Type' => 'application/json',
+                ),
+                'body' => wp_json_encode( $paystack_data ),
+                'timeout' => 30,
+            )
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Payment gateway connection failed. Please try again.', 'gaenity-community' ),
+            );
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( ! isset( $body['status'] ) || ! $body['status'] || ! isset( $body['data']['authorization_url'] ) ) {
+            return array(
+                'success' => false,
+                'message' => isset( $body['message'] ) ? $body['message'] : __( 'Payment initialization failed.', 'gaenity-community' ),
+            );
+        }
+
         return array(
             'success' => true,
-            'message' => __( 'Redirecting to Paystack...', 'gaenity-community' ),
-            'redirect_url' => $paystack_url,
+            'message' => __( 'Redirecting to payment gateway...', 'gaenity-community' ),
+            'redirect_url' => $body['data']['authorization_url'],
+            'requires_redirect' => true,
         );
     }
 
@@ -4912,7 +4962,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         global $wpdb;
         $wpdb->update(
             $wpdb->prefix . 'gaenity_transactions',
-            array( 'status' => 'awaiting_confirmation' ),
+            array( 'status' => 'completed' ),
             array( 'transaction_id' => $transaction_id ),
             array( '%s' ),
             array( '%s' )
@@ -4922,6 +4972,197 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             'success' => true,
             'message' => __( 'Order submitted! Please make the bank transfer and send confirmation to our email.', 'gaenity-community' ),
         );
+    }
+
+    /**
+     * Handle payment gateway callback.
+     */
+    public function handle_payment_callback() {
+        if ( ! isset( $_GET['gaenity_payment_callback'] ) || $_GET['gaenity_payment_callback'] !== '1' ) {
+            return;
+        }
+
+        $gateway = isset( $_GET['gateway'] ) ? sanitize_text_field( $_GET['gateway'] ) : '';
+        $transaction_id = isset( $_GET['transaction_id'] ) ? sanitize_text_field( $_GET['transaction_id'] ) : '';
+
+        if ( empty( $gateway ) || empty( $transaction_id ) ) {
+            wp_die( esc_html__( 'Invalid payment callback.', 'gaenity-community' ) );
+        }
+
+        global $wpdb;
+
+        // Verify transaction exists
+        $transaction = $wpdb->get_row( $wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}gaenity_transactions WHERE transaction_id = %s",
+            $transaction_id
+        ) );
+
+        if ( ! $transaction ) {
+            wp_die( esc_html__( 'Transaction not found.', 'gaenity-community' ) );
+        }
+
+        // Verify payment based on gateway
+        $payment_verified = false;
+
+        if ( 'paystack' === $gateway ) {
+            $payment_verified = $this->verify_paystack_payment( $transaction_id );
+        }
+
+        if ( ! $payment_verified ) {
+            wp_redirect( add_query_arg( 'payment', 'failed', home_url( '/' ) ) );
+            exit;
+        }
+
+        // Get transaction data
+        $transaction_data = get_option( 'gaenity_temp_transaction_' . $transaction_id );
+
+        if ( ! $transaction_data ) {
+            wp_die( esc_html__( 'Transaction data not found.', 'gaenity-community' ) );
+        }
+
+        // Update transaction status
+        $wpdb->update(
+            $wpdb->prefix . 'gaenity_transactions',
+            array( 'status' => 'completed' ),
+            array( 'transaction_id' => $transaction_id ),
+            array( '%s' ),
+            array( '%s' )
+        );
+
+        // Check transaction type
+        if ( $transaction->item_type === 'expert_consultation' ) {
+            // Handle expert consultation
+            $expert_data = get_option( 'gaenity_temp_expert_request_' . $transaction_id );
+
+            if ( ! $expert_data ) {
+                wp_die( esc_html__( 'Expert consultation data not found.', 'gaenity-community' ) );
+            }
+
+            // Save expert request to database
+            $wpdb->insert(
+                $wpdb->prefix . 'gaenity_expert_requests',
+                array(
+                    'user_id'    => $expert_data['user_id'],
+                    'name'       => $expert_data['title'],
+                    'email'      => $expert_data['email'],
+                    'role'       => $expert_data['role'],
+                    'region'     => $expert_data['region'],
+                    'country'    => $expert_data['country'],
+                    'industry'   => $expert_data['industry'],
+                    'challenge'  => $expert_data['challenge'],
+                    'description'=> $expert_data['details'],
+                    'budget'     => $expert_data['budget'],
+                    'preference' => $expert_data['preference'],
+                ),
+                array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+            );
+
+            // Clean up temporary data
+            delete_option( 'gaenity_temp_expert_request_' . $transaction_id );
+
+            // Redirect to success page
+            wp_redirect( add_query_arg( array( 'expert_request' => 'success' ), home_url( '/' ) ) );
+            exit;
+        }
+
+        // Handle resource download (existing code)
+        // Get configurable expiry and limit settings
+        $expiry_days = absint( get_option( 'gaenity_download_expiry_days', 30 ) );
+        $download_limit = absint( get_option( 'gaenity_download_limit', 3 ) );
+
+        // Grant access to the resource with configurable expiration
+        $expires_at = gmdate( 'Y-m-d H:i:s', strtotime( "+{$expiry_days} days" ) );
+
+        $wpdb->insert(
+            $wpdb->prefix . 'gaenity_paid_resource_access',
+            array(
+                'resource_id'      => $transaction_data['resource_id'],
+                'transaction_id'   => $transaction_id,
+                'user_id'          => $transaction_data['user_id'],
+                'email'            => $transaction_data['email'],
+                'role'             => $transaction_data['role'],
+                'region'           => $transaction_data['region'],
+                'industry'         => $transaction_data['industry'],
+                'download_count'   => 0,
+                'max_downloads'    => $download_limit,
+                'expires_at'       => $expires_at,
+            ),
+            array( '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s' )
+        );
+
+        // Get download URL
+        $download_url = get_post_meta( $transaction_data['resource_id'], '_gaenity_resource_file', true );
+
+        // Send email notification
+        $user_name = explode( '@', $transaction_data['email'] )[0];
+        $resource_title = get_the_title( $transaction_data['resource_id'] );
+
+        // Create download page URL
+        $download_page_url = home_url( '/download/' );
+        $download_page_url = add_query_arg(
+            array(
+                'resource_id'  => $transaction_data['resource_id'],
+                'download_url' => urlencode( $download_url ),
+                'paid'         => 1,
+            ),
+            $download_page_url
+        );
+
+        $this->send_resource_email(
+            'paid',
+            array(
+                'email'          => $transaction_data['email'],
+                'user_name'      => ucfirst( $user_name ),
+                'resource_title' => $resource_title,
+                'download_link'  => $download_page_url,
+                'expiry_days'    => $expiry_days,
+                'download_limit' => $download_limit,
+            )
+        );
+
+        // Clean up temporary data
+        delete_option( 'gaenity_temp_transaction_' . $transaction_id );
+
+        // Redirect to download page
+        wp_redirect( $download_page_url );
+        exit;
+    }
+
+    /**
+     * Verify Paystack payment.
+     */
+    protected function verify_paystack_payment( $transaction_id ) {
+        $secret_key = get_option( 'gaenity_paystack_secret_key', '' );
+
+        if ( empty( $secret_key ) ) {
+            return false;
+        }
+
+        $response = wp_remote_get(
+            'https://api.paystack.co/transaction/verify/' . $transaction_id,
+            array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $secret_key,
+                ),
+                'timeout' => 30,
+            )
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return false;
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( ! isset( $body['status'] ) || ! $body['status'] ) {
+            return false;
+        }
+
+        if ( ! isset( $body['data']['status'] ) || $body['data']['status'] !== 'success' ) {
+            return false;
+        }
+
+        return true;
     }
     /**
      * Render courses grid.
@@ -5687,7 +5928,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
 
         wp_send_json_success(
             array(
-                'message'       => __( 'Success! Redirecting to download page...', 'gaenity-community' ),
+                'message'       => __( 'Success! Redirecting to your download...', 'gaenity-community' ),
                 'redirect_url'  => $download_page_url,
             )
         );
@@ -5740,6 +5981,16 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             array( '%d', '%s', '%s', '%d', '%f', '%s', '%s', '%s', '%s' )
         );
 
+        // Store transaction data for callback processing
+        update_option( 'gaenity_temp_transaction_' . $transaction_id, array(
+            'resource_id' => $resource_id,
+            'email' => $email,
+            'role' => $role,
+            'region' => $region,
+            'industry' => $industry,
+            'user_id' => $user_id,
+        ), false );
+
         // Process payment based on gateway
         switch ( $gateway ) {
             case 'stripe':
@@ -5758,7 +6009,17 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 $result = array( 'success' => false, 'message' => __( 'Invalid payment gateway.', 'gaenity-community' ) );
         }
 
-        // If payment is successful, grant access to the resource
+        // If payment requires redirect to gateway (like Paystack, Stripe), return redirect URL
+        if ( $result['success'] && isset( $result['requires_redirect'] ) && $result['requires_redirect'] ) {
+            wp_send_json_success(
+                array(
+                    'message' => $result['message'],
+                    'redirect_url' => $result['redirect_url'],
+                )
+            );
+        }
+
+        // If payment is successful and doesn't require redirect (e.g., bank transfer), grant access immediately
         if ( $result['success'] ) {
             // Update transaction status
             $wpdb->update(
@@ -6078,6 +6339,7 @@ wp_send_json_success(
             wp_send_json_error( array( 'message' => __( 'Please complete all required fields.', 'gaenity-community' ) ) );
         }
     }
+
     // Get values - map form fields to database columns
     $title       = sanitize_text_field( wp_unslash( $_POST['title'] ) ); // Form has 'title'
     $email       = sanitize_email( wp_unslash( $_POST['email'] ) );
@@ -6092,27 +6354,140 @@ wp_send_json_success(
     $budget      = isset( $_POST['budget'] ) ? sanitize_text_field( wp_unslash( $_POST['budget'] ) ) : '';
     $preference  = isset( $_POST['preference'] ) ? sanitize_text_field( wp_unslash( $_POST['preference'] ) ) : '';
 
-        global $wpdb;
-$wpdb->insert(
-    $wpdb->prefix . 'gaenity_expert_requests',
-    array(
-        'user_id'    => get_current_user_id(),
-        'name'       => $title, // Store title in name column
-        'email'      => $email,
-        'role'       => $role,
-        'region'     => $region,
-        'country'    => $country,
-        'industry'   => $industry,
-        'challenge'  => $challenge,
-        'description'=> $details, // Store details in description column
-        'budget'     => $budget,
-        'preference' => $preference,
-    ),
-    array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
-);
+    global $wpdb;
 
-        wp_send_json_success( array( 'message' => __( 'Your request has been submitted. We will be in touch soon.', 'gaenity-community' ) ) );
+    // Check if paid consultations are enabled
+    $is_paid = get_option( 'gaenity_expert_request_paid', 1 );
+
+    if ( $is_paid ) {
+        // Paid consultation - require payment gateway
+        $gateway = isset( $_POST['payment_gateway'] ) ? sanitize_text_field( $_POST['payment_gateway'] ) : '';
+
+        if ( empty( $gateway ) ) {
+            wp_send_json_error( array( 'message' => __( 'Please select a payment method.', 'gaenity-community' ) ) );
+        }
+
+        $amount = absint( get_option( 'gaenity_expert_consultation_price', 50 ) );
+        $currency = get_option( 'gaenity_currency', 'USD' );
+        $user_id = get_current_user_id();
+
+        // Create transaction record
+        $transaction_id = 'TXNEXP_' . time() . '_' . wp_generate_password( 8, false );
+
+        $wpdb->insert(
+            $wpdb->prefix . 'gaenity_transactions',
+            array(
+                'user_id'        => $user_id,
+                'email'          => $email,
+                'item_type'      => 'expert_consultation',
+                'item_id'        => 0,
+                'amount'         => $amount,
+                'currency'       => $currency,
+                'gateway'        => $gateway,
+                'transaction_id' => $transaction_id,
+                'status'         => 'pending',
+            ),
+            array( '%d', '%s', '%s', '%d', '%f', '%s', '%s', '%s', '%s' )
+        );
+
+        // Store expert request data for callback processing
+        update_option( 'gaenity_temp_expert_request_' . $transaction_id, array(
+            'title' => $title,
+            'email' => $email,
+            'details' => $details,
+            'region' => $region,
+            'industry' => $industry,
+            'role' => $role,
+            'country' => $country,
+            'challenge' => $challenge,
+            'budget' => $budget,
+            'preference' => $preference,
+            'user_id' => $user_id,
+        ), false );
+
+        // Process payment based on gateway
+        switch ( $gateway ) {
+            case 'stripe':
+                $result = $this->process_stripe_payment( $transaction_id, $amount, $currency, $email, 0 );
+                break;
+            case 'paypal':
+                $result = $this->process_paypal_payment( $transaction_id, $amount, $currency, $email, 0 );
+                break;
+            case 'paystack':
+                $result = $this->process_paystack_payment( $transaction_id, $amount, $currency, $email, 0 );
+                break;
+            case 'bank_transfer':
+                $result = $this->process_bank_transfer( $transaction_id, $amount, $currency, $email, 0 );
+                break;
+            default:
+                $result = array( 'success' => false, 'message' => __( 'Invalid payment gateway.', 'gaenity-community' ) );
+        }
+
+        // If payment requires redirect to gateway, return redirect URL
+        if ( $result['success'] && isset( $result['requires_redirect'] ) && $result['requires_redirect'] ) {
+            wp_send_json_success(
+                array(
+                    'message' => $result['message'],
+                    'redirect_url' => $result['redirect_url'],
+                )
+            );
+        }
+
+        // If payment is immediate (bank transfer), save request
+        if ( $result['success'] ) {
+            $wpdb->update(
+                $wpdb->prefix . 'gaenity_transactions',
+                array( 'status' => 'completed' ),
+                array( 'transaction_id' => $transaction_id ),
+                array( '%s' ),
+                array( '%s' )
+            );
+
+            $wpdb->insert(
+                $wpdb->prefix . 'gaenity_expert_requests',
+                array(
+                    'user_id'    => $user_id,
+                    'name'       => $title,
+                    'email'      => $email,
+                    'role'       => $role,
+                    'region'     => $region,
+                    'country'    => $country,
+                    'industry'   => $industry,
+                    'challenge'  => $challenge,
+                    'description'=> $details,
+                    'budget'     => $budget,
+                    'preference' => $preference,
+                ),
+                array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+            );
+
+            wp_send_json_success( array( 'message' => __( 'Your consultation request has been submitted. We will be in touch soon.', 'gaenity-community' ) ) );
+        } else {
+            wp_send_json_error( $result );
+        }
+    } else {
+        // Free consultation - just save the request
+        $wpdb->insert(
+            $wpdb->prefix . 'gaenity_expert_requests',
+            array(
+                'user_id'    => get_current_user_id(),
+                'name'       => $title,
+                'email'      => $email,
+                'role'       => $role,
+                'region'     => $region,
+                'country'    => $country,
+                'industry'   => $industry,
+                'challenge'  => $challenge,
+                'description'=> $details,
+                'budget'     => $budget,
+                'preference' => $preference,
+            ),
+            array( '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+        );
+
+        wp_send_json_success( array( 'message' => __( 'Your consultation request has been submitted. We will be in touch soon.', 'gaenity-community' ) ) );
     }
+}
 
     /**
      * Handle expert registration submissions.
@@ -9097,19 +9472,51 @@ $wpdb->insert(
                                 <?php esc_html_e( 'Your Email', 'gaenity-community' ); ?>
                                 <span class="required">*</span>
                             </label>
-                            <input 
-                                type="email" 
-                                id="gaenity_question_email" 
-                                name="email" 
+                            <input
+                                type="email"
+                                id="gaenity_question_email"
+                                name="email"
                                 class="gaenity-form-input"
                                 placeholder="<?php esc_attr_e( 'your@email.com', 'gaenity-community' ); ?>"
                                 value="<?php echo esc_attr( is_user_logged_in() ? wp_get_current_user()->user_email : '' ); ?>"
-                                required 
+                                required
                             />
                             <p class="gaenity-form-help">
                                 <?php esc_html_e( "We'll send the expert's response to this email", 'gaenity-community' ); ?>
                             </p>
                         </div>
+
+                        <?php if ( $is_paid ) : ?>
+                            <!-- Payment Gateway Selection -->
+                            <div class="gaenity-form-group">
+                                <label class="gaenity-form-label">
+                                    <?php esc_html_e( 'Payment Method', 'gaenity-community' ); ?>
+                                    <span class="required">*</span>
+                                </label>
+                                <div class="gaenity-payment-methods-compact">
+                                    <?php
+                                    $enabled_gateways = get_option( 'gaenity_enabled_gateways', array( 'stripe', 'paypal', 'paystack', 'bank_transfer' ) );
+                                    $gateway_labels = array(
+                                        'stripe' => __( 'Credit/Debit Card (Stripe)', 'gaenity-community' ),
+                                        'paypal' => __( 'PayPal', 'gaenity-community' ),
+                                        'paystack' => __( 'Paystack', 'gaenity-community' ),
+                                        'bank_transfer' => __( 'Bank Transfer', 'gaenity-community' ),
+                                    );
+
+                                    foreach ( $enabled_gateways as $gateway ) {
+                                        if ( isset( $gateway_labels[ $gateway ] ) ) :
+                                    ?>
+                                        <label class="gaenity-payment-option">
+                                            <input type="radio" name="payment_gateway" value="<?php echo esc_attr( $gateway ); ?>" required />
+                                            <span><?php echo esc_html( $gateway_labels[ $gateway ] ); ?></span>
+                                        </label>
+                                    <?php
+                                        endif;
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Submit Button -->
                         <button type="submit" class="gaenity-submit-btn">
