@@ -4865,12 +4865,20 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
      * Process Stripe payment.
      */
     protected function process_stripe_payment( $transaction_id, $amount, $currency, $email, $item_id ) {
-        // For now, return a placeholder
-        // You would integrate Stripe PHP SDK here
+        $stripe_key = get_option( 'gaenity_stripe_secret_key', '' );
+
+        if ( empty( $stripe_key ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Stripe is not configured. Please contact the site administrator.', 'gaenity-community' )
+            );
+        }
+
+        // TODO: Implement Stripe Checkout Session
+        // For now, return error asking for proper setup
         return array(
-            'success' => true,
-            'message' => __( 'Stripe integration ready. Add Stripe PHP SDK for live processing.', 'gaenity-community' ),
-            'redirect_url' => add_query_arg( 'payment', 'success', home_url( '/dashboard' ) ),
+            'success' => false,
+            'message' => __( 'Stripe payment integration is pending. Please use Paystack or another payment method.', 'gaenity-community' ),
         );
     }
 
@@ -4878,10 +4886,20 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
      * Process PayPal payment.
      */
     protected function process_paypal_payment( $transaction_id, $amount, $currency, $email, $item_id ) {
+        $paypal_client_id = get_option( 'gaenity_paypal_client_id', '' );
+
+        if ( empty( $paypal_client_id ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'PayPal is not configured. Please contact the site administrator.', 'gaenity-community' )
+            );
+        }
+
+        // TODO: Implement PayPal integration
+        // For now, return error asking for proper setup
         return array(
-            'success' => true,
-            'message' => __( 'PayPal integration ready.', 'gaenity-community' ),
-            'redirect_url' => add_query_arg( 'payment', 'success', home_url( '/dashboard' ) ),
+            'success' => false,
+            'message' => __( 'PayPal payment integration is pending. Please use Paystack or another payment method.', 'gaenity-community' ),
         );
     }
 
@@ -5013,13 +5031,6 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             exit;
         }
 
-        // Get transaction data
-        $transaction_data = get_option( 'gaenity_temp_transaction_' . $transaction_id );
-
-        if ( ! $transaction_data ) {
-            wp_die( esc_html__( 'Transaction data not found.', 'gaenity-community' ) );
-        }
-
         // Update transaction status
         $wpdb->update(
             $wpdb->prefix . 'gaenity_transactions',
@@ -5029,7 +5040,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             array( '%s' )
         );
 
-        // Check transaction type
+        // Check transaction type and handle accordingly
         if ( $transaction->item_type === 'expert_consultation' ) {
             // Handle expert consultation
             $expert_data = get_option( 'gaenity_temp_expert_request_' . $transaction_id );
@@ -5065,7 +5076,13 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             exit;
         }
 
-        // Handle resource download (existing code)
+        // Handle resource download
+        $transaction_data = get_option( 'gaenity_temp_transaction_' . $transaction_id );
+
+        if ( ! $transaction_data ) {
+            wp_die( esc_html__( 'Resource transaction data not found.', 'gaenity-community' ) );
+        }
+
         // Get configurable expiry and limit settings
         $expiry_days = absint( get_option( 'gaenity_download_expiry_days', 30 ) );
         $download_limit = absint( get_option( 'gaenity_download_limit', 3 ) );
