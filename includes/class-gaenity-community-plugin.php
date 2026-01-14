@@ -1966,6 +1966,11 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             update_option( 'gaenity_paid_resource_email_subject', sanitize_text_field( $_POST['gaenity_paid_resource_email_subject'] ) );
             update_option( 'gaenity_paid_resource_email_body', wp_kses_post( $_POST['gaenity_paid_resource_email_body'] ) );
 
+            // Save download page settings
+            update_option( 'gaenity_download_page_title', sanitize_text_field( $_POST['gaenity_download_page_title'] ) );
+            update_option( 'gaenity_download_page_message', wp_kses_post( $_POST['gaenity_download_page_message'] ) );
+            update_option( 'gaenity_download_page_button_text', sanitize_text_field( $_POST['gaenity_download_page_button_text'] ) );
+
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings saved successfully!', 'gaenity-community' ) . '</p></div>';
         }
 
@@ -2449,6 +2454,42 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                     </tr>
                 </table>
 
+                <h2><?php esc_html_e( 'Download Page Customization', 'gaenity-community' ); ?></h2>
+                <p><?php esc_html_e( 'Customize the thank you page that users see after requesting a resource download.', 'gaenity-community' ); ?></p>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_download_page_title"><?php esc_html_e( 'Page Title', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_download_page_title" name="gaenity_download_page_title" value="<?php echo esc_attr( get_option( 'gaenity_download_page_title', 'Thank You!' ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'The main heading shown on the download page', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_download_page_message"><?php esc_html_e( 'Thank You Message', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <?php
+                            $default_message = "Your resource is ready for download. We've also sent the download link to your email.";
+                            ?>
+                            <textarea id="gaenity_download_page_message" name="gaenity_download_page_message" rows="4" class="large-text"><?php echo esc_textarea( get_option( 'gaenity_download_page_message', $default_message ) ); ?></textarea>
+                            <p class="description"><?php esc_html_e( 'The message shown to users on the download page', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_download_page_button_text"><?php esc_html_e( 'Download Button Text', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_download_page_button_text" name="gaenity_download_page_button_text" value="<?php echo esc_attr( get_option( 'gaenity_download_page_button_text', 'Download Now' ) ); ?>" class="regular-text" />
+                            <p class="description"><?php esc_html_e( 'Text for the download button', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
                 <p class="submit">
 
         <button type="submit" name="gaenity_save_settings" class="button button-primary"><?php esc_html_e( 'Save Settings', 'gaenity-community' ); ?></button>
@@ -2501,6 +2542,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         add_shortcode( 'gaenity_contact', array( $this, 'render_contact_form' ) );
         add_shortcode( 'gaenity_community_chat', array( $this, 'render_chat_interface' ) );
         add_shortcode( 'gaenity_dashboard', array( $this, 'render_custom_dashboard' ) );
+        add_shortcode( 'gaenity_download', array( $this, 'render_download_page' ) );
 
     }
     /**
@@ -5238,20 +5280,31 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         $user_name = explode( '@', $email )[0];
         $resource_title = get_the_title( $resource_id );
 
+        // Create download page URL
+        $download_page_url = home_url( '/download/' );
+        $download_page_url = add_query_arg(
+            array(
+                'resource_id'  => $resource_id,
+                'download_url' => urlencode( $download ),
+                'paid'         => 0,
+            ),
+            $download_page_url
+        );
+
         $this->send_resource_email(
             'free',
             array(
                 'email'          => $email,
                 'user_name'      => ucfirst( $user_name ),
                 'resource_title' => $resource_title,
-                'download_link'  => $download,
+                'download_link'  => $download_page_url,
             )
         );
 
         wp_send_json_success(
             array(
-                'message'      => __( 'Thanks! Your download will begin shortly.', 'gaenity-community' ),
-                'download_url' => $download,
+                'message'       => __( 'Success! Redirecting to download page...', 'gaenity-community' ),
+                'redirect_url'  => $download_page_url,
             )
         );
     }
@@ -5363,13 +5416,24 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             $user_name = explode( '@', $email )[0];
             $resource_title = get_the_title( $resource_id );
 
+            // Create download page URL
+            $download_page_url = home_url( '/download/' );
+            $download_page_url = add_query_arg(
+                array(
+                    'resource_id'  => $resource_id,
+                    'download_url' => urlencode( $download_url ),
+                    'paid'         => 1,
+                ),
+                $download_page_url
+            );
+
             $this->send_resource_email(
                 'paid',
                 array(
                     'email'          => $email,
                     'user_name'      => ucfirst( $user_name ),
                     'resource_title' => $resource_title,
-                    'download_link'  => $download_url,
+                    'download_link'  => $download_page_url,
                     'amount'         => $amount,
                     'transaction_id' => $transaction_id,
                     'download_limit' => $download_limit,
@@ -5379,8 +5443,8 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
 
             wp_send_json_success(
                 array(
-                    'message'      => __( 'Payment successful! Your download will begin shortly.', 'gaenity-community' ),
-                    'download_url' => $download_url,
+                    'message'      => __( 'Payment successful! Redirecting to download page...', 'gaenity-community' ),
+                    'redirect_url' => $download_page_url,
                 )
             );
         } else {
@@ -6239,6 +6303,272 @@ $wpdb->insert(
                 </form>
             </div>
         </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Render beautiful download page.
+     */
+    public function render_download_page() {
+        // Get URL parameters
+        $resource_id = isset( $_GET['resource_id'] ) ? absint( $_GET['resource_id'] ) : 0;
+        $download_url = isset( $_GET['download_url'] ) ? esc_url_raw( $_GET['download_url'] ) : '';
+        $is_paid = isset( $_GET['paid'] ) ? (bool) $_GET['paid'] : false;
+
+        if ( ! $resource_id || ! $download_url ) {
+            return '<div class="gaenity-error"><p>' . esc_html__( 'Invalid download link.', 'gaenity-community' ) . '</p></div>';
+        }
+
+        // Get resource details
+        $resource_title = get_the_title( $resource_id );
+
+        // Get customizable settings
+        $page_title = get_option( 'gaenity_download_page_title', 'Thank You!' );
+        $page_message = get_option( 'gaenity_download_page_message', "Your resource is ready for download. We've also sent the download link to your email." );
+        $button_text = get_option( 'gaenity_download_page_button_text', 'Download Now' );
+
+        ob_start();
+        ?>
+        <div class="gaenity-download-page">
+            <div class="gaenity-download-container">
+                <div class="gaenity-download-success-icon">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="40" fill="#10B981" fill-opacity="0.1"/>
+                        <circle cx="40" cy="40" r="32" fill="#10B981" fill-opacity="0.2"/>
+                        <path d="M25 40L35 50L55 30" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <h1 class="gaenity-download-title"><?php echo esc_html( $page_title ); ?></h1>
+
+                <div class="gaenity-download-resource-info">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span><?php echo esc_html( $resource_title ); ?></span>
+                </div>
+
+                <p class="gaenity-download-message"><?php echo esc_html( $page_message ); ?></p>
+
+                <div class="gaenity-download-actions">
+                    <a href="<?php echo esc_url( $download_url ); ?>" class="gaenity-download-button" download>
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 3v12M6 11l4 4 4-4M3 17h14"/>
+                        </svg>
+                        <?php echo esc_html( $button_text ); ?>
+                    </a>
+                </div>
+
+                <?php if ( $is_paid ) : ?>
+                    <div class="gaenity-download-info-box">
+                        <h3><?php esc_html_e( 'Access Details', 'gaenity-community' ); ?></h3>
+                        <ul>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.707 6.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L7 8.586l3.293-3.293a1 1 0 011.414 1.414z"/>
+                                </svg>
+                                <?php printf( esc_html__( 'Access expires in %d days', 'gaenity-community' ), absint( get_option( 'gaenity_download_expiry_days', 30 ) ) ); ?>
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.707 6.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L7 8.586l3.293-3.293a1 1 0 011.414 1.414z"/>
+                                </svg>
+                                <?php printf( esc_html__( 'Maximum %d downloads allowed', 'gaenity-community' ), absint( get_option( 'gaenity_download_limit', 3 ) ) ); ?>
+                            </li>
+                            <li>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.707 6.707l-4 4a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L7 8.586l3.293-3.293a1 1 0 011.414 1.414z"/>
+                                </svg>
+                                <?php esc_html_e( 'Download link sent to your email', 'gaenity-community' ); ?>
+                            </li>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
+                <div class="gaenity-download-footer">
+                    <p><?php esc_html_e( 'Need help?', 'gaenity-community' ); ?> <a href="<?php echo esc_url( home_url( '/contact' ) ); ?>"><?php esc_html_e( 'Contact Support', 'gaenity-community' ); ?></a></p>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .gaenity-download-page {
+                min-height: 70vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .gaenity-download-container {
+                background: #ffffff;
+                border-radius: 24px;
+                padding: 3rem 2rem;
+                max-width: 600px;
+                width: 100%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                text-align: center;
+                animation: slideUp 0.6s ease-out;
+            }
+
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .gaenity-download-success-icon {
+                margin: 0 auto 2rem;
+                animation: scaleIn 0.5s ease-out 0.2s both;
+            }
+
+            @keyframes scaleIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.5);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            .gaenity-download-title {
+                font-size: 2.5rem;
+                font-weight: 700;
+                color: #1e293b;
+                margin-bottom: 1rem;
+                line-height: 1.2;
+            }
+
+            .gaenity-download-resource-info {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1.5rem;
+                background: #f1f5f9;
+                border-radius: 12px;
+                color: #475569;
+                font-weight: 600;
+                margin-bottom: 1.5rem;
+            }
+
+            .gaenity-download-message {
+                font-size: 1.125rem;
+                color: #64748b;
+                margin-bottom: 2rem;
+                line-height: 1.6;
+            }
+
+            .gaenity-download-actions {
+                margin-bottom: 2rem;
+            }
+
+            .gaenity-download-button {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 1rem 2.5rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: #ffffff;
+                font-size: 1.125rem;
+                font-weight: 600;
+                border-radius: 12px;
+                text-decoration: none;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            }
+
+            .gaenity-download-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+                color: #ffffff;
+            }
+
+            .gaenity-download-info-box {
+                background: #f8fafc;
+                border: 2px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                text-align: left;
+            }
+
+            .gaenity-download-info-box h3 {
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 1rem;
+            }
+
+            .gaenity-download-info-box ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .gaenity-download-info-box li {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem 0;
+                color: #475569;
+                font-size: 0.9375rem;
+            }
+
+            .gaenity-download-info-box li:not(:last-child) {
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .gaenity-download-info-box li svg {
+                flex-shrink: 0;
+                color: #10B981;
+            }
+
+            .gaenity-download-footer {
+                padding-top: 2rem;
+                border-top: 1px solid #e2e8f0;
+                color: #64748b;
+                font-size: 0.875rem;
+            }
+
+            .gaenity-download-footer a {
+                color: #667eea;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .gaenity-download-footer a:hover {
+                text-decoration: underline;
+            }
+
+            @media (max-width: 640px) {
+                .gaenity-download-container {
+                    padding: 2rem 1.5rem;
+                }
+
+                .gaenity-download-title {
+                    font-size: 2rem;
+                }
+
+                .gaenity-download-message {
+                    font-size: 1rem;
+                }
+
+                .gaenity-download-button {
+                    width: 100%;
+                    justify-content: center;
+                }
+            }
+        </style>
         <?php
         return ob_get_clean();
     }
