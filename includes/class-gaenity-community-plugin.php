@@ -4872,15 +4872,87 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         if ( empty( $stripe_key ) ) {
             return array(
                 'success' => false,
-                'message' => __( 'Stripe is not configured. Please contact the site administrator.', 'gaenity-community' )
+                'message' => __( 'Stripe is not configured. Please add your Secret Key in settings.', 'gaenity-community' )
             );
         }
 
-        // TODO: Implement Stripe Checkout Session
-        // For now, return error asking for proper setup
+        // Create callback URLs
+        $success_url = add_query_arg(
+            array(
+                'gaenity_payment_callback' => '1',
+                'gateway' => 'stripe',
+                'transaction_id' => $transaction_id,
+                'session_id' => '{CHECKOUT_SESSION_ID}',
+            ),
+            home_url( '/' )
+        );
+
+        $cancel_url = add_query_arg( 'payment', 'cancelled', home_url( '/' ) );
+
+        // Create Stripe Checkout Session
+        $session_data = array(
+            'payment_method_types' => array( 'card' ),
+            'line_items' => array(
+                array(
+                    'price_data' => array(
+                        'currency' => strtolower( $currency ),
+                        'product_data' => array(
+                            'name' => get_bloginfo( 'name' ) . ' - ' . __( 'Payment', 'gaenity-community' ),
+                        ),
+                        'unit_amount' => (int) ( $amount * 100 ), // Amount in cents
+                    ),
+                    'quantity' => 1,
+                ),
+            ),
+            'mode' => 'payment',
+            'success_url' => $success_url,
+            'cancel_url' => $cancel_url,
+            'customer_email' => $email,
+            'client_reference_id' => $transaction_id,
+        );
+
+        $response = wp_remote_post(
+            'https://api.stripe.com/v1/checkout/sessions',
+            array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $stripe_key,
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ),
+                'body' => http_build_query( $session_data ),
+            )
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Failed to create Stripe session. Please try again.', 'gaenity-community' ),
+            );
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( isset( $body['error'] ) ) {
+            return array(
+                'success' => false,
+                'message' => isset( $body['error']['message'] ) ? $body['error']['message'] : __( 'Stripe error occurred.', 'gaenity-community' ),
+            );
+        }
+
+        if ( ! isset( $body['id'] ) || ! isset( $body['url'] ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Failed to create Stripe session. Please try again.', 'gaenity-community' ),
+            );
+        }
+
+        // Store Stripe session ID for verification
+        update_option( 'gaenity_stripe_session_' . $transaction_id, $body['id'], false );
+
         return array(
-            'success' => false,
-            'message' => __( 'Stripe payment integration is pending. Please use Paystack or another payment method.', 'gaenity-community' ),
+            'success' => true,
+            'message' => __( 'Redirecting to Stripe...', 'gaenity-community' ),
+            'redirect_url' => $body['url'],
+            'requires_redirect' => true,
         );
     }
 
@@ -4889,19 +4961,133 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
      */
     protected function process_paypal_payment( $transaction_id, $amount, $currency, $email, $item_id ) {
         $paypal_client_id = get_option( 'gaenity_paypal_client_id', '' );
+        $paypal_client_secret = get_option( 'gaenity_paypal_client_secret', '' );
 
-        if ( empty( $paypal_client_id ) ) {
+        if ( empty( $paypal_client_id ) || empty( $paypal_client_secret ) ) {
             return array(
                 'success' => false,
-                'message' => __( 'PayPal is not configured. Please contact the site administrator.', 'gaenity-community' )
+                'message' => __( 'PayPal is not configured. Please add your Client ID and Secret in settings.', 'gaenity-community' )
             );
         }
 
-        // TODO: Implement PayPal integration
-        // For now, return error asking for proper setup
+        // Determine if using sandbox or live
+        $is_sandbox = get_option( 'gaenity_paypal_sandbox', '1' ) === '1';
+        $api_base = $is_sandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+
+        // Get PayPal access token
+        $auth_response = wp_remote_post(
+            $api_base . '/v1/oauth2/token',
+            array(
+                'headers' => array(
+                    'Accept' => 'application/json',
+                    'Accept-Language' => 'en_US',
+                    'Authorization' => 'Basic ' . base64_encode( $paypal_client_id . ':' . $paypal_client_secret ),
+                ),
+                'body' => array(
+                    'grant_type' => 'client_credentials',
+                ),
+            )
+        );
+
+        if ( is_wp_error( $auth_response ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'PayPal authentication failed. Please check your credentials.', 'gaenity-community' ),
+            );
+        }
+
+        $auth_body = json_decode( wp_remote_retrieve_body( $auth_response ), true );
+
+        if ( ! isset( $auth_body['access_token'] ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'PayPal authentication failed. Please check your credentials.', 'gaenity-community' ),
+            );
+        }
+
+        $access_token = $auth_body['access_token'];
+
+        // Create callback URL
+        $callback_url = add_query_arg(
+            array(
+                'gaenity_payment_callback' => '1',
+                'gateway' => 'paypal',
+                'transaction_id' => $transaction_id,
+            ),
+            home_url( '/' )
+        );
+
+        // Create PayPal order
+        $order_data = array(
+            'intent' => 'CAPTURE',
+            'purchase_units' => array(
+                array(
+                    'reference_id' => $transaction_id,
+                    'amount' => array(
+                        'currency_code' => strtoupper( $currency ),
+                        'value' => number_format( (float) $amount, 2, '.', '' ),
+                    ),
+                ),
+            ),
+            'application_context' => array(
+                'return_url' => $callback_url,
+                'cancel_url' => add_query_arg( 'payment', 'cancelled', home_url( '/' ) ),
+                'brand_name' => get_bloginfo( 'name' ),
+                'user_action' => 'PAY_NOW',
+            ),
+        );
+
+        $order_response = wp_remote_post(
+            $api_base . '/v2/checkout/orders',
+            array(
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $access_token,
+                ),
+                'body' => wp_json_encode( $order_data ),
+            )
+        );
+
+        if ( is_wp_error( $order_response ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Failed to create PayPal order. Please try again.', 'gaenity-community' ),
+            );
+        }
+
+        $order_body = json_decode( wp_remote_retrieve_body( $order_response ), true );
+
+        if ( ! isset( $order_body['id'] ) || ! isset( $order_body['links'] ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'Failed to create PayPal order. Please try again.', 'gaenity-community' ),
+            );
+        }
+
+        // Find approval URL
+        $approval_url = '';
+        foreach ( $order_body['links'] as $link ) {
+            if ( $link['rel'] === 'approve' ) {
+                $approval_url = $link['href'];
+                break;
+            }
+        }
+
+        if ( empty( $approval_url ) ) {
+            return array(
+                'success' => false,
+                'message' => __( 'PayPal approval URL not found.', 'gaenity-community' ),
+            );
+        }
+
+        // Store PayPal order ID for verification
+        update_option( 'gaenity_paypal_order_' . $transaction_id, $order_body['id'], false );
+
         return array(
-            'success' => false,
-            'message' => __( 'PayPal payment integration is pending. Please use Paystack or another payment method.', 'gaenity-community' ),
+            'success' => true,
+            'message' => __( 'Redirecting to PayPal...', 'gaenity-community' ),
+            'redirect_url' => $approval_url,
+            'requires_redirect' => true,
         );
     }
 
@@ -5026,6 +5212,10 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
 
         if ( 'paystack' === $gateway ) {
             $payment_verified = $this->verify_paystack_payment( $transaction_id );
+        } elseif ( 'paypal' === $gateway ) {
+            $payment_verified = $this->verify_paypal_payment( $transaction_id );
+        } elseif ( 'stripe' === $gateway ) {
+            $payment_verified = $this->verify_stripe_payment( $transaction_id );
         }
 
         if ( ! $payment_verified ) {
@@ -5182,6 +5372,136 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         }
 
         return true;
+    }
+
+    /**
+     * Verify PayPal payment.
+     */
+    protected function verify_paypal_payment( $transaction_id ) {
+        $paypal_client_id = get_option( 'gaenity_paypal_client_id', '' );
+        $paypal_client_secret = get_option( 'gaenity_paypal_client_secret', '' );
+
+        if ( empty( $paypal_client_id ) || empty( $paypal_client_secret ) ) {
+            return false;
+        }
+
+        // Get stored PayPal order ID
+        $order_id = get_option( 'gaenity_paypal_order_' . $transaction_id );
+
+        if ( empty( $order_id ) ) {
+            // Try getting from URL parameter
+            $order_id = isset( $_GET['token'] ) ? sanitize_text_field( $_GET['token'] ) : '';
+        }
+
+        if ( empty( $order_id ) ) {
+            return false;
+        }
+
+        // Determine if using sandbox or live
+        $is_sandbox = get_option( 'gaenity_paypal_sandbox', '1' ) === '1';
+        $api_base = $is_sandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+
+        // Get access token
+        $auth_response = wp_remote_post(
+            $api_base . '/v1/oauth2/token',
+            array(
+                'headers' => array(
+                    'Accept' => 'application/json',
+                    'Accept-Language' => 'en_US',
+                    'Authorization' => 'Basic ' . base64_encode( $paypal_client_id . ':' . $paypal_client_secret ),
+                ),
+                'body' => array(
+                    'grant_type' => 'client_credentials',
+                ),
+            )
+        );
+
+        if ( is_wp_error( $auth_response ) ) {
+            return false;
+        }
+
+        $auth_body = json_decode( wp_remote_retrieve_body( $auth_response ), true );
+
+        if ( ! isset( $auth_body['access_token'] ) ) {
+            return false;
+        }
+
+        $access_token = $auth_body['access_token'];
+
+        // Capture the order (complete the payment)
+        $capture_response = wp_remote_post(
+            $api_base . '/v2/checkout/orders/' . $order_id . '/capture',
+            array(
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'Authorization' => 'Bearer ' . $access_token,
+                ),
+            )
+        );
+
+        if ( is_wp_error( $capture_response ) ) {
+            return false;
+        }
+
+        $capture_body = json_decode( wp_remote_retrieve_body( $capture_response ), true );
+
+        // Check if payment was successful
+        if ( isset( $capture_body['status'] ) && $capture_body['status'] === 'COMPLETED' ) {
+            // Clean up stored order ID
+            delete_option( 'gaenity_paypal_order_' . $transaction_id );
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Verify Stripe payment.
+     */
+    protected function verify_stripe_payment( $transaction_id ) {
+        $stripe_key = get_option( 'gaenity_stripe_secret_key', '' );
+
+        if ( empty( $stripe_key ) ) {
+            return false;
+        }
+
+        // Get stored Stripe session ID
+        $session_id = get_option( 'gaenity_stripe_session_' . $transaction_id );
+
+        if ( empty( $session_id ) ) {
+            // Try getting from URL parameter
+            $session_id = isset( $_GET['session_id'] ) ? sanitize_text_field( $_GET['session_id'] ) : '';
+        }
+
+        if ( empty( $session_id ) ) {
+            return false;
+        }
+
+        // Retrieve the session from Stripe
+        $response = wp_remote_get(
+            'https://api.stripe.com/v1/checkout/sessions/' . $session_id,
+            array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $stripe_key,
+                ),
+                'timeout' => 30,
+            )
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return false;
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        // Check if payment was successful
+        if ( isset( $body['payment_status'] ) && $body['payment_status'] === 'paid' ) {
+            // Clean up stored session ID
+            delete_option( 'gaenity_stripe_session_' . $transaction_id );
+            return true;
+        }
+
+        return false;
     }
 
     /**
