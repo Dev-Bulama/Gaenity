@@ -118,6 +118,20 @@
             feedback.classList.remove('gaenity-error');
         }
 
+        // Handle redirect to download page
+        if (data && data.redirect_url) {
+            const modal = form.closest('.gaenity-modal');
+            if (modal) {
+                modal.setAttribute('hidden', 'hidden');
+                document.body.style.overflow = '';
+            }
+            setTimeout(() => {
+                window.location.href = data.redirect_url;
+            }, 500);
+            return;
+        }
+
+        // Legacy: Handle direct download URL (for backward compatibility)
         if (data && data.download_url) {
             window.open(data.download_url, '_blank');
             const modal = form.closest('.gaenity-modal');
