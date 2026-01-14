@@ -44,6 +44,8 @@ class Gaeinity_Community_Plugin {
         add_action( 'init', array( $this, 'register_roles' ) );
         add_action( 'init', array( $this, 'load_textdomain' ) );
         add_action( 'init', array( $this, 'handle_payment_callback' ) );
+        add_action( 'template_redirect', array( $this, 'handle_download_page_redirect' ) );
+        add_action( 'wp_footer', array( $this, 'show_expert_request_success_message' ) );
         // add_action( 'admin_menu', array( $this, 'add_admin_menu_pages' ) );
         add_filter( 'template_include', array( $this, 'load_plugin_templates' ) );
         // Force comments to be open for discussions
@@ -5180,6 +5182,65 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
         }
 
         return true;
+    }
+
+    /**
+     * Handle download page redirect for virtual /download/ URLs.
+     */
+    public function handle_download_page_redirect() {
+        // Check if we're on /download/ URL
+        $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+
+        if ( strpos( $request_uri, '/download/' ) !== false || strpos( $request_uri, '/download?' ) !== false ) {
+            // Check if we have the required parameters
+            if ( isset( $_GET['resource_id'] ) && isset( $_GET['download_url'] ) ) {
+                // Render the download page directly
+                get_header();
+                echo $this->render_download_page();
+                get_footer();
+                exit;
+            }
+        }
+    }
+
+    /**
+     * Show expert request success message.
+     */
+    public function show_expert_request_success_message() {
+        if ( isset( $_GET['expert_request'] ) && $_GET['expert_request'] === 'success' ) {
+            ?>
+            <div id="gaenity-expert-success-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 999999; padding: 1rem;">
+                <div style="background: white; border-radius: 16px; max-width: 500px; width: 100%; padding: 2rem; text-align: center; animation: slideIn 0.3s ease;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 1.75rem; font-weight: 700; color: #0f172a; margin: 0 0 1rem 0;">
+                        <?php esc_html_e( 'Request Submitted Successfully!', 'gaenity-community' ); ?>
+                    </h2>
+                    <p style="font-size: 1.125rem; color: #64748b; margin: 0 0 2rem 0; line-height: 1.6;">
+                        <?php esc_html_e( 'Thank you for your consultation request. Our expert team will review your question and send a detailed response to your email within 48 hours.', 'gaenity-community' ); ?>
+                    </p>
+                    <button onclick="document.getElementById('gaenity-expert-success-modal').style.display='none'; window.history.replaceState({}, document.title, window.location.pathname);" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s;">
+                        <?php esc_html_e( 'Got It!', 'gaenity-community' ); ?>
+                    </button>
+                </div>
+            </div>
+            <style>
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9) translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+            </style>
+            <?php
+        }
     }
     /**
      * Render courses grid.
