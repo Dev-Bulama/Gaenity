@@ -2148,6 +2148,23 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             update_option( 'gaenity_expert_request_paid', isset( $_POST['gaenity_expert_request_paid'] ) ? 1 : 0 );
             update_option( 'gaenity_expert_consultation_price', absint( $_POST['gaenity_expert_consultation_price'] ) );
 
+            // Save Ask an Expert customization
+            update_option( 'gaenity_expert_page_title', sanitize_text_field( $_POST['gaenity_expert_page_title'] ) );
+            update_option( 'gaenity_expert_page_subtitle', sanitize_text_field( $_POST['gaenity_expert_page_subtitle'] ) );
+            update_option( 'gaenity_expert_form_title', sanitize_text_field( $_POST['gaenity_expert_form_title'] ) );
+            update_option( 'gaenity_expert_button_text', sanitize_text_field( $_POST['gaenity_expert_button_text'] ) );
+            update_option( 'gaenity_expert_page_bg', sanitize_hex_color( $_POST['gaenity_expert_page_bg'] ) );
+            update_option( 'gaenity_expert_title_color', sanitize_hex_color( $_POST['gaenity_expert_title_color'] ) );
+            update_option( 'gaenity_expert_title_font_size', absint( $_POST['gaenity_expert_title_font_size'] ) );
+            update_option( 'gaenity_expert_subtitle_color', sanitize_hex_color( $_POST['gaenity_expert_subtitle_color'] ) );
+            update_option( 'gaenity_expert_button_bg', sanitize_hex_color( $_POST['gaenity_expert_button_bg'] ) );
+            update_option( 'gaenity_expert_button_hover_bg', sanitize_hex_color( $_POST['gaenity_expert_button_hover_bg'] ) );
+            update_option( 'gaenity_expert_button_text_color', sanitize_hex_color( $_POST['gaenity_expert_button_text_color'] ) );
+            update_option( 'gaenity_expert_button_font_size', absint( $_POST['gaenity_expert_button_font_size'] ) );
+            update_option( 'gaenity_expert_label_color', sanitize_hex_color( $_POST['gaenity_expert_label_color'] ) );
+            update_option( 'gaenity_expert_input_border', sanitize_hex_color( $_POST['gaenity_expert_input_border'] ) );
+            update_option( 'gaenity_expert_input_focus_border', sanitize_hex_color( $_POST['gaenity_expert_input_focus_border'] ) );
+
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Settings saved successfully!', 'gaenity-community' ) . '</p></div>';
         }
 
@@ -2700,6 +2717,159 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                         <td>
                             <input type="number" id="gaenity_expert_consultation_price" name="gaenity_expert_consultation_price" value="<?php echo esc_attr( get_option( 'gaenity_expert_consultation_price', 50 ) ); ?>" class="small-text" min="1" step="1" />
                             <p class="description"><?php printf( esc_html__( 'Price per consultation in %s (only applies if payment is required)', 'gaenity-community' ), esc_html( get_option( 'gaenity_currency', 'USD' ) ) ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr style="margin: 40px 0;">
+                <h2><?php esc_html_e( 'Ask an Expert Customization', 'gaenity-community' ); ?></h2>
+                <p><?php esc_html_e( 'Customize the appearance of the Ask an Expert form.', 'gaenity-community' ); ?></p>
+
+                <table class="form-table">
+                    <tr>
+                        <th colspan="2"><h3 style="margin: 0;"><?php esc_html_e( 'Text Content', 'gaenity-community' ); ?></h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_page_title"><?php esc_html_e( 'Page Title', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_expert_page_title" name="gaenity_expert_page_title" value="<?php echo esc_attr( get_option( 'gaenity_expert_page_title', __( 'Ask an Expert', 'gaenity-community' ) ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'Main heading shown at the top of the page', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_page_subtitle"><?php esc_html_e( 'Page Subtitle', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_expert_page_subtitle" name="gaenity_expert_page_subtitle" value="<?php echo esc_attr( get_option( 'gaenity_expert_page_subtitle', __( 'Need personalized guidance? Ask a verified expert and receive a detailed answer within 48 hours.', 'gaenity-community' ) ) ); ?>" class="large-text" />
+                            <p class="description"><?php esc_html_e( 'Subtitle shown below the main heading', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_form_title"><?php esc_html_e( 'Form Title', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_expert_form_title" name="gaenity_expert_form_title" value="<?php echo esc_attr( get_option( 'gaenity_expert_form_title', __( 'Submit Your Question', 'gaenity-community' ) ) ); ?>" class="regular-text" />
+                            <p class="description"><?php esc_html_e( 'Heading shown above the form', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_button_text"><?php esc_html_e( 'Submit Button Text', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="text" id="gaenity_expert_button_text" name="gaenity_expert_button_text" value="<?php echo esc_attr( get_option( 'gaenity_expert_button_text', __( '💳 Submit & Pay', 'gaenity-community' ) ) ); ?>" class="regular-text" />
+                            <p class="description"><?php esc_html_e( 'Text for the submit button', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th colspan="2"><h3 style="margin: 20px 0 0 0;"><?php esc_html_e( 'Colors', 'gaenity-community' ); ?></h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_page_bg"><?php esc_html_e( 'Page Background', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_page_bg" name="gaenity_expert_page_bg" value="<?php echo esc_attr( get_option( 'gaenity_expert_page_bg', '#f8fafc' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Background color for the entire page', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_title_color"><?php esc_html_e( 'Title Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_title_color" name="gaenity_expert_title_color" value="<?php echo esc_attr( get_option( 'gaenity_expert_title_color', '#0f172a' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Color for main headings', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_subtitle_color"><?php esc_html_e( 'Subtitle/Text Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_subtitle_color" name="gaenity_expert_subtitle_color" value="<?php echo esc_attr( get_option( 'gaenity_expert_subtitle_color', '#64748b' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Color for subtitle and help text', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_label_color"><?php esc_html_e( 'Label Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_label_color" name="gaenity_expert_label_color" value="<?php echo esc_attr( get_option( 'gaenity_expert_label_color', '#334155' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Color for form field labels', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_button_bg"><?php esc_html_e( 'Button Background', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_button_bg" name="gaenity_expert_button_bg" value="<?php echo esc_attr( get_option( 'gaenity_expert_button_bg', '#4f46e5' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Primary button background color', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_button_hover_bg"><?php esc_html_e( 'Button Hover Background', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_button_hover_bg" name="gaenity_expert_button_hover_bg" value="<?php echo esc_attr( get_option( 'gaenity_expert_button_hover_bg', '#3730a3' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Button background color on hover', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_button_text_color"><?php esc_html_e( 'Button Text Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_button_text_color" name="gaenity_expert_button_text_color" value="<?php echo esc_attr( get_option( 'gaenity_expert_button_text_color', '#ffffff' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Color for button text', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_input_border"><?php esc_html_e( 'Input Border Color', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_input_border" name="gaenity_expert_input_border" value="<?php echo esc_attr( get_option( 'gaenity_expert_input_border', '#e2e8f0' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Border color for form inputs', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_input_focus_border"><?php esc_html_e( 'Input Focus Border', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="color" id="gaenity_expert_input_focus_border" name="gaenity_expert_input_focus_border" value="<?php echo esc_attr( get_option( 'gaenity_expert_input_focus_border', '#4f46e5' ) ); ?>" />
+                            <p class="description"><?php esc_html_e( 'Border color when input is focused', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th colspan="2"><h3 style="margin: 20px 0 0 0;"><?php esc_html_e( 'Typography', 'gaenity-community' ); ?></h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_title_font_size"><?php esc_html_e( 'Title Font Size (px)', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_expert_title_font_size" name="gaenity_expert_title_font_size" value="<?php echo esc_attr( get_option( 'gaenity_expert_title_font_size', 40 ) ); ?>" class="small-text" min="20" max="80" />
+                            <p class="description"><?php esc_html_e( 'Font size for the main title (20-80px)', 'gaenity-community' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="gaenity_expert_button_font_size"><?php esc_html_e( 'Button Font Size (px)', 'gaenity-community' ); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" id="gaenity_expert_button_font_size" name="gaenity_expert_button_font_size" value="<?php echo esc_attr( get_option( 'gaenity_expert_button_font_size', 18 ) ); ?>" class="small-text" min="12" max="24" />
+                            <p class="description"><?php esc_html_e( 'Font size for buttons (12-24px)', 'gaenity-community' ); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -8528,12 +8698,30 @@ $wpdb->insert(
      * Render expert request form - NEW VERSION
      */
     public function render_expert_request_form() {
+        // Get customization settings
+        $is_paid = get_option( 'gaenity_expert_request_paid', 1 );
+        $consultation_price = absint( get_option( 'gaenity_expert_consultation_price', 50 ) );
+        $currency_symbol = $this->get_currency_symbol();
+
+        // Customization options
+        $page_bg = get_option( 'gaenity_expert_page_bg', '#f8fafc' );
+        $title_color = get_option( 'gaenity_expert_title_color', '#0f172a' );
+        $title_font_size = get_option( 'gaenity_expert_title_font_size', 40 );
+        $subtitle_color = get_option( 'gaenity_expert_subtitle_color', '#64748b' );
+        $button_bg = get_option( 'gaenity_expert_button_bg', '#4f46e5' );
+        $button_hover_bg = get_option( 'gaenity_expert_button_hover_bg', '#3730a3' );
+        $button_text_color = get_option( 'gaenity_expert_button_text_color', '#ffffff' );
+        $button_font_size = get_option( 'gaenity_expert_button_font_size', 18 );
+        $label_color = get_option( 'gaenity_expert_label_color', '#334155' );
+        $input_border_color = get_option( 'gaenity_expert_input_border', '#e2e8f0' );
+        $input_focus_border = get_option( 'gaenity_expert_input_focus_border', '#4f46e5' );
+
         ob_start();
         ?>
         <style>
         .gaenity-expert-page {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f8fafc;
+            background: <?php echo esc_attr( $page_bg ); ?>;
             min-height: 100vh;
             padding: 3rem 0;
         }
@@ -8547,22 +8735,22 @@ $wpdb->insert(
             margin-bottom: 3rem;
         }
         .gaenity-expert-title {
-            font-size: 2.5rem;
+            font-size: <?php echo absint( $title_font_size ); ?>px;
             font-weight: 800;
-            color: #0f172a;
+            color: <?php echo esc_attr( $title_color ); ?>;
             margin: 0 0 1rem 0;
             letter-spacing: -0.025em;
         }
         .gaenity-expert-blurb {
             font-size: 1.25rem;
-            color: #64748b;
+            color: <?php echo esc_attr( $subtitle_color ); ?>;
             line-height: 1.7;
             font-style: italic;
             margin: 0 0 2rem 0;
         }
         .gaenity-expert-steps {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(<?php echo $is_paid ? '3' : '2'; ?>, 1fr);
             gap: 2rem;
             margin-bottom: 3rem;
         }
@@ -8575,7 +8763,7 @@ $wpdb->insert(
             transition: all 0.3s ease;
         }
         .gaenity-step:hover {
-            border-color: #4f46e5;
+            border-color: <?php echo esc_attr( $button_bg ); ?>;
             transform: translateY(-4px);
             box-shadow: 0 12px 24px rgba(79, 70, 229, 0.15);
         }
@@ -8585,7 +8773,7 @@ $wpdb->insert(
             justify-content: center;
             width: 3rem;
             height: 3rem;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, <?php echo esc_attr( $button_bg ); ?> 0%, <?php echo esc_attr( $button_hover_bg ); ?> 100%);
             color: #ffffff;
             border-radius: 50%;
             font-size: 1.5rem;
@@ -8595,12 +8783,12 @@ $wpdb->insert(
         .gaenity-step-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #0f172a;
+            color: <?php echo esc_attr( $title_color ); ?>;
             margin: 0 0 0.5rem 0;
         }
         .gaenity-step-text {
             font-size: 0.9375rem;
-            color: #64748b;
+            color: <?php echo esc_attr( $subtitle_color ); ?>;
             line-height: 1.6;
             margin: 0;
         }
@@ -8614,7 +8802,7 @@ $wpdb->insert(
         .gaenity-form-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #0f172a;
+            color: <?php echo esc_attr( $title_color ); ?>;
             margin: 0 0 1.5rem 0;
         }
         .gaenity-form-group {
@@ -8624,7 +8812,7 @@ $wpdb->insert(
             display: block;
             font-weight: 600;
             font-size: 0.9375rem;
-            color: #334155;
+            color: <?php echo esc_attr( $label_color ); ?>;
             margin-bottom: 0.5rem;
         }
         .gaenity-form-label .required {
@@ -8636,7 +8824,7 @@ $wpdb->insert(
         .gaenity-form-textarea {
             width: 100%;
             padding: 0.875rem 1rem;
-            border: 2px solid #e2e8f0;
+            border: 2px solid <?php echo esc_attr( $input_border_color ); ?>;
             border-radius: 0.75rem;
             font-size: 1rem;
             font-family: inherit;
@@ -8647,7 +8835,7 @@ $wpdb->insert(
         .gaenity-form-select:focus,
         .gaenity-form-textarea:focus {
             outline: none;
-            border-color: #4f46e5;
+            border-color: <?php echo esc_attr( $input_focus_border ); ?>;
             background: #ffffff;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
@@ -8657,7 +8845,7 @@ $wpdb->insert(
         }
         .gaenity-form-help {
             font-size: 0.875rem;
-            color: #64748b;
+            color: <?php echo esc_attr( $subtitle_color ); ?>;
             margin-top: 0.375rem;
         }
         .gaenity-form-file {
@@ -8670,25 +8858,25 @@ $wpdb->insert(
             transition: all 0.2s ease;
         }
         .gaenity-form-file:hover {
-            border-color: #4f46e5;
+            border-color: <?php echo esc_attr( $button_bg ); ?>;
             background: #eef2ff;
         }
         .gaenity-form-file input[type="file"] {
             display: none;
         }
         .gaenity-file-label {
-            color: #4f46e5;
+            color: <?php echo esc_attr( $button_bg ); ?>;
             font-weight: 600;
             cursor: pointer;
         }
         .gaenity-submit-btn {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: #ffffff;
+            background: linear-gradient(135deg, <?php echo esc_attr( $button_bg ); ?> 0%, <?php echo esc_attr( $button_hover_bg ); ?> 100%);
+            color: <?php echo esc_attr( $button_text_color ); ?>;
             border: none;
             border-radius: 0.875rem;
-            font-size: 1.125rem;
+            font-size: <?php echo absint( $button_font_size ); ?>px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -8730,12 +8918,22 @@ $wpdb->insert(
             font-size: 0.9375rem;
             line-height: 1.6;
         }
+        .gaenity-price-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+        }
         @media (max-width: 768px) {
             .gaenity-expert-steps {
                 grid-template-columns: 1fr;
             }
             .gaenity-expert-title {
-                font-size: 2rem;
+                font-size: <?php echo max( 24, absint( $title_font_size ) - 16 ); ?>px;
             }
             .gaenity-expert-blurb {
                 font-size: 1.125rem;
@@ -8750,10 +8948,19 @@ $wpdb->insert(
             <div class="gaenity-expert-container">
                 <!-- Header -->
                 <div class="gaenity-expert-header">
-                    <h1 class="gaenity-expert-title"><?php esc_html_e( 'Ask an Expert', 'gaenity-community' ); ?></h1>
+                    <h1 class="gaenity-expert-title"><?php echo esc_html( get_option( 'gaenity_expert_page_title', __( 'Ask an Expert', 'gaenity-community' ) ) ); ?></h1>
                     <p class="gaenity-expert-blurb">
-                        "<?php esc_html_e( 'Need personalized guidance? Ask a verified expert and receive a detailed answer within 48 hours.', 'gaenity-community' ); ?>"
+                        "<?php echo esc_html( get_option( 'gaenity_expert_page_subtitle', __( 'Need personalized guidance? Ask a verified expert and receive a detailed answer within 48 hours.', 'gaenity-community' ) ) ); ?>"
                     </p>
+                    <?php if ( $is_paid ) : ?>
+                        <div class="gaenity-price-badge">
+                            <?php printf( esc_html__( '%s%s per consultation', 'gaenity-community' ), esc_html( $currency_symbol ), number_format_i18n( $consultation_price ) ); ?>
+                        </div>
+                    <?php else : ?>
+                        <div class="gaenity-price-badge" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                            <?php esc_html_e( 'Free Consultation', 'gaenity-community' ); ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Steps -->
@@ -8763,29 +8970,43 @@ $wpdb->insert(
                         <h3 class="gaenity-step-title"><?php esc_html_e( 'Ask', 'gaenity-community' ); ?></h3>
                         <p class="gaenity-step-text"><?php esc_html_e( 'Fill in your question with all relevant details', 'gaenity-community' ); ?></p>
                     </div>
-                    <div class="gaenity-step">
-                        <div class="gaenity-step-number">2</div>
-                        <h3 class="gaenity-step-title"><?php esc_html_e( 'Pay', 'gaenity-community' ); ?></h3>
-                        <p class="gaenity-step-text"><?php esc_html_e( 'Submit and complete payment securely', 'gaenity-community' ); ?></p>
-                    </div>
-                    <div class="gaenity-step">
-                        <div class="gaenity-step-number">3</div>
-                        <h3 class="gaenity-step-title"><?php esc_html_e( 'Receive', 'gaenity-community' ); ?></h3>
-                        <p class="gaenity-step-text"><?php esc_html_e( "Get your expert's response within 48 hours", 'gaenity-community' ); ?></p>
-                    </div>
+                    <?php if ( $is_paid ) : ?>
+                        <div class="gaenity-step">
+                            <div class="gaenity-step-number">2</div>
+                            <h3 class="gaenity-step-title"><?php esc_html_e( 'Pay', 'gaenity-community' ); ?></h3>
+                            <p class="gaenity-step-text"><?php esc_html_e( 'Submit and complete payment securely', 'gaenity-community' ); ?></p>
+                        </div>
+                        <div class="gaenity-step">
+                            <div class="gaenity-step-number">3</div>
+                            <h3 class="gaenity-step-title"><?php esc_html_e( 'Receive', 'gaenity-community' ); ?></h3>
+                            <p class="gaenity-step-text"><?php esc_html_e( "Get your expert's response within 48 hours", 'gaenity-community' ); ?></p>
+                        </div>
+                    <?php else : ?>
+                        <div class="gaenity-step">
+                            <div class="gaenity-step-number">2</div>
+                            <h3 class="gaenity-step-title"><?php esc_html_e( 'Receive', 'gaenity-community' ); ?></h3>
+                            <p class="gaenity-step-text"><?php esc_html_e( "Get your expert's response within 48 hours", 'gaenity-community' ); ?></p>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Info Box -->
                 <div class="gaenity-info-box">
                     <p>
                         <strong>💡 <?php esc_html_e( 'How it works:', 'gaenity-community' ); ?></strong>
-                        <?php esc_html_e( 'Our verified experts are experienced professionals ready to provide personalized advice. Payment is processed securely, and you\'ll receive a detailed response directly to your email within 48 hours.', 'gaenity-community' ); ?>
+                        <?php
+                        if ( $is_paid ) {
+                            esc_html_e( 'Our verified experts are experienced professionals ready to provide personalized advice. Payment is processed securely, and you\'ll receive a detailed response directly to your email within 48 hours.', 'gaenity-community' );
+                        } else {
+                            esc_html_e( 'Our verified experts are experienced professionals ready to provide personalized advice. Submit your question and you\'ll receive a detailed response directly to your email within 48 hours - completely free!', 'gaenity-community' );
+                        }
+                        ?>
                     </p>
                 </div>
 
                 <!-- Form Card -->
                 <div class="gaenity-expert-form-card">
-                    <h2 class="gaenity-form-title"><?php esc_html_e( 'Submit Your Question', 'gaenity-community' ); ?></h2>
+                    <h2 class="gaenity-form-title"><?php echo esc_html( get_option( 'gaenity_expert_form_title', __( 'Submit Your Question', 'gaenity-community' ) ) ); ?></h2>
 
                     <form class="gaenity-form gaenity-ajax-form">
                         <input type="hidden" name="action" value="gaenity_expert_request" />
@@ -8892,7 +9113,13 @@ $wpdb->insert(
 
                         <!-- Submit Button -->
                         <button type="submit" class="gaenity-submit-btn">
-                            💳 <?php esc_html_e( 'Submit & Pay', 'gaenity-community' ); ?>
+                            <?php
+                            if ( $is_paid ) {
+                                echo esc_html( get_option( 'gaenity_expert_button_text', __( '💳 Submit & Pay', 'gaenity-community' ) ) );
+                            } else {
+                                echo esc_html( get_option( 'gaenity_expert_button_text', __( '📩 Submit Question', 'gaenity-community' ) ) );
+                            }
+                            ?>
                         </button>
 
                         <!-- Form Feedback -->
@@ -8901,9 +9128,15 @@ $wpdb->insert(
                 </div>
 
                 <!-- Additional Info -->
-                <div style="margin-top: 2rem; text-align: center; color: #64748b; font-size: 0.875rem;">
+                <div style="margin-top: 2rem; text-align: center; color: <?php echo esc_attr( $subtitle_color ); ?>; font-size: 0.875rem;">
                     <p>
-                        <?php esc_html_e( '🔒 Your payment information is processed securely. Questions are matched with experts based on expertise and availability.', 'gaenity-community' ); ?>
+                        <?php
+                        if ( $is_paid ) {
+                            esc_html_e( '🔒 Your payment information is processed securely. Questions are matched with experts based on expertise and availability.', 'gaenity-community' );
+                        } else {
+                            esc_html_e( '🔒 Your information is kept private and secure. Questions are matched with experts based on expertise and availability.', 'gaenity-community' );
+                        }
+                        ?>
                     </p>
                 </div>
             </div>
