@@ -327,6 +327,10 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 ),
                 'public'      => true,
                 'has_archive' => true,
+                'rewrite'     => array(
+                    'slug'       => 'forum',
+                    'with_front' => false,
+                ),
                 'supports'    => array( 'title', 'editor', 'author', 'comments' ),
                 'menu_icon'   => 'dashicons-format-chat',
                 'show_in_rest'=> true,
