@@ -1437,7 +1437,7 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                                 <td><?php echo esc_html( $item->email ); ?></td>
                                 <td><?php echo esc_html( $item->role ); ?></td>
                                 <td><?php echo esc_html( $item->industry ); ?></td>
-                                <td><?php echo $item->consent ? 'âœ“' : 'â€”'; ?></td>
+                                <td><?php echo $item->consent ? '<span style="color: #10b981;">&#10003;</span>' : '<span style="color: #94a3b8;">&mdash;</span>'; ?></td>
                                 <td><?php echo esc_html( mysql2date( 'M j, Y', $item->created_at ) ); ?></td>
                                 <td>
                                     <a href="<?php echo wp_nonce_url( admin_url( 'admin.php?page=gaenity-resource-downloads&action=delete&id=' . $item->id ), 'delete_download_' . $item->id ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this record?', 'gaenity-community' ); ?>')"><?php esc_html_e( 'Delete', 'gaenity-community' ); ?></a>
@@ -1683,9 +1683,11 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                 <hr class="wp-header-end">
 
                 <?php
+                $paged = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
                 $resources = new WP_Query( array(
                     'post_type' => 'gaenity_resource',
-                    'posts_per_page' => -1,
+                    'posts_per_page' => 20,
+                    'paged' => $paged,
                     'orderby' => 'date',
                     'order' => 'DESC',
                 ) );
@@ -1768,7 +1770,23 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
                         <?php endif; ?>
                     </tbody>
                 </table>
-                <?php wp_reset_postdata(); ?>
+
+                <?php
+                // Pagination
+                if ( $resources->max_num_pages > 1 ) {
+                    echo '<div class="tablenav bottom"><div class="tablenav-pages">';
+                    echo paginate_links( array(
+                        'base' => add_query_arg( 'paged', '%#%' ),
+                        'format' => '',
+                        'prev_text' => '&laquo;',
+                        'next_text' => '&raquo;',
+                        'total' => $resources->max_num_pages,
+                        'current' => $paged,
+                    ) );
+                    echo '</div></div>';
+                }
+                wp_reset_postdata();
+                ?>
 
             <?php elseif ( $action === 'add' || $action === 'edit' ) : ?>
                 
@@ -1893,6 +1911,24 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
     public function render_transactions_page() {
         global $wpdb;
 
+        // Handle bulk delete
+        if ( isset( $_POST['action'] ) && $_POST['action'] === 'bulk_delete' && isset( $_POST['transaction_ids'] ) && check_admin_referer( 'bulk_delete_transactions' ) ) {
+            $transaction_ids = array_map( 'absint', $_POST['transaction_ids'] );
+            $placeholders = implode( ',', array_fill( 0, count( $transaction_ids ), '%d' ) );
+            $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}gaenity_transactions WHERE id IN ($placeholders)", $transaction_ids ) );
+            echo '<div class="notice notice-success"><p>' . esc_html( sprintf( __( '%d transaction(s) deleted successfully!', 'gaenity-community' ), count( $transaction_ids ) ) ) . '</p></div>';
+        }
+
+        // Handle single delete
+        if ( isset( $_GET['action'] ) && $_GET['action'] === 'delete' && isset( $_GET['id'] ) && check_admin_referer( 'delete_transaction_' . $_GET['id'] ) ) {
+            $wpdb->delete(
+                $wpdb->prefix . 'gaenity_transactions',
+                array( 'id' => absint( $_GET['id'] ) ),
+                array( '%d' )
+            );
+            echo '<div class="notice notice-success"><p>' . esc_html__( 'Transaction deleted successfully!', 'gaenity-community' ) . '</p></div>';
+        }
+
         // Handle status update
         if ( isset( $_GET['action'] ) && $_GET['action'] === 'approve' && isset( $_GET['id'] ) && check_admin_referer( 'approve_transaction_' . $_GET['id'] ) ) {
             $wpdb->update(
@@ -1903,68 +1939,111 @@ $votes_discussion_table = $wpdb->prefix . 'gaenity_discussion_votes';
             echo '<div class="notice notice-success"><p>' . esc_html__( 'Transaction approved!', 'gaenity-community' ) . '</p></div>';
         }
 
-        $transactions = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}gaenity_transactions ORDER BY created_at DESC" );
+        // Pagination
+        $per_page = 20;
+        $paged = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
+        $offset = ( $paged - 1 ) * $per_page;
+
+        $total = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gaenity_transactions" );
+        $transactions = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}gaenity_transactions ORDER BY created_at DESC LIMIT %d OFFSET %d", $per_page, $offset ) );
         ?>
         <div class="wrap">
             <h1><?php esc_html_e( 'Payment Transactions', 'gaenity-community' ); ?></h1>
-            
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th><?php esc_html_e( 'ID', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'User', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Item', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Amount', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Gateway', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Status', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Date', 'gaenity-community' ); ?></th>
-                        <th><?php esc_html_e( 'Actions', 'gaenity-community' ); ?></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ( ! empty( $transactions ) ) : ?>
-                        <?php foreach ( $transactions as $txn ) : 
-                            $item = get_post( $txn->item_id );
-                            $user = $txn->user_id ? get_userdata( $txn->user_id ) : null;
-                        ?>
-                            <tr>
-                                <td><strong><?php echo esc_html( $txn->id ); ?></strong></td>
-                                <td>
-                                    <?php if ( $user ) : ?>
-                                        <?php echo esc_html( $user->display_name ); ?><br>
-                                        <small><?php echo esc_html( $txn->email ); ?></small>
-                                    <?php else : ?>
-                                        <?php echo esc_html( $txn->email ); ?>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo $item ? esc_html( $item->post_title ) : esc_html( $txn->item_type . ' #' . $txn->item_id ); ?></td>
-                                <td><strong><?php echo esc_html( $txn->currency . ' ' . number_format( $txn->amount, 2 ) ); ?></strong></td>
-                                <td><?php echo esc_html( ucfirst( $txn->gateway ) ); ?></td>
-                                <td>
-                                    <?php if ( $txn->status === 'completed' ) : ?>
-                                        <span style="background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">COMPLETED</span>
-                                    <?php elseif ( $txn->status === 'awaiting_confirmation' ) : ?>
-                                        <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">AWAITING</span>
-                                    <?php else : ?>
-                                        <span style="background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;"><?php echo esc_html( strtoupper( $txn->status ) ); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo esc_html( date( 'M j, Y g:i A', strtotime( $txn->created_at ) ) ); ?></td>
-                                <td>
-                                    <?php if ( $txn->status === 'awaiting_confirmation' ) : ?>
-                                        <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=gaenity-transactions&action=approve&id=' . $txn->id ), 'approve_transaction_' . $txn->id ) ); ?>" class="button button-small button-primary"><?php esc_html_e( 'Approve', 'gaenity-community' ); ?></a>
-                                    <?php else : ?>
-                                        â€”
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else : ?>
-                        <tr><td colspan="8" style="text-align: center; padding: 40px;"><?php esc_html_e( 'No transactions yet.', 'gaenity-community' ); ?></td></tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+
+            <form method="post" id="gaenity-transactions-form">
+                <?php wp_nonce_field( 'bulk_delete_transactions' ); ?>
+                <input type="hidden" name="action" value="bulk_delete">
+
+                <div class="tablenav top">
+                    <div class="alignleft actions bulkactions">
+                        <button type="submit" class="button" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete the selected transactions?', 'gaenity-community' ); ?>')"><?php esc_html_e( 'Delete Selected', 'gaenity-community' ); ?></button>
+                    </div>
+                </div>
+
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <td class="manage-column column-cb check-column"><input type="checkbox" id="cb-select-all"></td>
+                            <th><?php esc_html_e( 'ID', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'User', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Item', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Amount', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Gateway', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Status', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Date', 'gaenity-community' ); ?></th>
+                            <th><?php esc_html_e( 'Actions', 'gaenity-community' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ( ! empty( $transactions ) ) : ?>
+                            <?php foreach ( $transactions as $txn ) :
+                                $item = get_post( $txn->item_id );
+                                $user = $txn->user_id ? get_userdata( $txn->user_id ) : null;
+                            ?>
+                                <tr>
+                                    <th scope="row" class="check-column"><input type="checkbox" name="transaction_ids[]" value="<?php echo esc_attr( $txn->id ); ?>"></th>
+                                    <td><strong><?php echo esc_html( $txn->id ); ?></strong></td>
+                                    <td>
+                                        <?php if ( $user ) : ?>
+                                            <?php echo esc_html( $user->display_name ); ?><br>
+                                            <small><?php echo esc_html( $txn->email ); ?></small>
+                                        <?php else : ?>
+                                            <?php echo esc_html( $txn->email ); ?>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $item ? esc_html( $item->post_title ) : esc_html( $txn->item_type . ' #' . $txn->item_id ); ?></td>
+                                    <td><strong><?php echo esc_html( $txn->currency . ' ' . number_format( $txn->amount, 2 ) ); ?></strong></td>
+                                    <td><?php echo esc_html( ucfirst( $txn->gateway ) ); ?></td>
+                                    <td>
+                                        <?php if ( $txn->status === 'completed' ) : ?>
+                                            <span style="background: #d1fae5; color: #065f46; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">COMPLETED</span>
+                                        <?php elseif ( $txn->status === 'awaiting_confirmation' ) : ?>
+                                            <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">AWAITING</span>
+                                        <?php else : ?>
+                                            <span style="background: #e5e7eb; color: #374151; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;"><?php echo esc_html( strtoupper( $txn->status ) ); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo esc_html( date( 'M j, Y g:i A', strtotime( $txn->created_at ) ) ); ?></td>
+                                    <td>
+                                        <?php if ( $txn->status === 'awaiting_confirmation' ) : ?>
+                                            <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=gaenity-transactions&action=approve&id=' . $txn->id ), 'approve_transaction_' . $txn->id ) ); ?>" class="button button-small button-primary"><?php esc_html_e( 'Approve', 'gaenity-community' ); ?></a>
+                                        <?php endif; ?>
+                                        <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=gaenity-transactions&action=delete&id=' . $txn->id ), 'delete_transaction_' . $txn->id ) ); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e( 'Delete this transaction?', 'gaenity-community' ); ?>')" style="color: #dc2626;"><?php esc_html_e( 'Delete', 'gaenity-community' ); ?></a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <tr><td colspan="9" style="text-align: center; padding: 40px;"><?php esc_html_e( 'No transactions yet.', 'gaenity-community' ); ?></td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </form>
+
+            <?php
+            // Pagination
+            $total_pages = ceil( $total / $per_page );
+            if ( $total_pages > 1 ) {
+                echo '<div class="tablenav bottom"><div class="tablenav-pages">';
+                echo paginate_links( array(
+                    'base' => add_query_arg( 'paged', '%#%' ),
+                    'format' => '',
+                    'prev_text' => '&laquo;',
+                    'next_text' => '&raquo;',
+                    'total' => $total_pages,
+                    'current' => $paged,
+                ) );
+                echo '</div></div>';
+            }
+            ?>
         </div>
+
+        <script>
+        jQuery(document).ready(function($) {
+            $('#cb-select-all').on('click', function() {
+                $('input[name="transaction_ids[]"]').prop('checked', this.checked);
+            });
+        });
+        </script>
         <?php
     }
 /**
